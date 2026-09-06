@@ -84,8 +84,49 @@ Phase 4 - Proving on the Tessallite Excel plugin (workspace repo, later)
   4.2 Feed back spec changes here; then publish the generalised example
       (D8).
 
+Phase 5 - Visualiser (v0.2, approved 2026-09-07)
+  Problem: the plugin document has 993 nodes; a human cannot read it or
+  even find the components in it. Wanted: a small browser visualiser in
+  the style of jsoncrack (node-link graph, left to right, pan and zoom),
+  whose defining feature is level of detail, not fidelity.
+  5.1 packages/visualiser: vanilla JavaScript + SVG, zero dependencies,
+      no framework. Sources src/index.html, src/app.js (state, views,
+      filters, search, detail panel), src/graph.js (model builder +
+      layered tree layout + pan/zoom), src/style.css; build.mjs inlines
+      them into dist/visualiser.html, one self-contained file that opens
+      from disk and takes a document by drag-drop or file picker.
+  5.2 Views. "Components": one card per component definition, grouped by
+      group/package, edges = used-by (component field and $ref from
+      structures and other component structures); no structure nodes.
+      "Structures": containment tree per structure, every root collapsed
+      to depth 1 on load; click to expand/collapse a node; "expand to
+      depth N"; filters: hide logical nodes, hide leaf types (text, icon,
+      divider, skeleton), only nodes with a component, hide overlays,
+      collapse repeat templates. Search on id/name/label/component expands
+      the path to each hit and highlights it.
+  5.3 Node card: id, type, kind, component, condition, repeat, overlay
+      markers. Detail panel on select: the node's full JSON plus its
+      path (breadcrumb, clickable). Counts panel: nodes by type for the
+      visible selection. Fit-to-view button.
+  5.4 CLI: `tuis view <file> [--out file.html]` writes dist/visualiser.html
+      with the document embedded, so `tuis view doc.json` gives a file that
+      opens without a picker.
+  5.5 Tests (vitest): model builder (component graph edges, filter
+      results, search expansion), layout (no overlaps in one layer, parent
+      centred on children), CLI view (embeds document, output is a single
+      file). Docs: README section, CHANGELOG 0.2.0, docs/_INDEX.md.
+  5.6 Gate: open the Excel plugin document in the built file; the
+      Components view must be readable at a glance and the Structures view
+      must open collapsed and expand on demand. Record results in the
+      handoff, not in the repo.
+  Design rules: corporate look, no icons/emojis, restrained palette, light
+  and dark via prefers-color-scheme. No plugin content committed anywhere
+  in this repo.
+
 ## Scope guard
 
 - No rendering, converters, HTTP API, authoring MCP tools, or LICENSE in v0.1.
+- The visualiser (Phase 5) draws the containment tree, never the UI; no layout or visual
+  information is inferred or shown.
 - The Excel example is out of v0.1 by decision, not omission (D8).
 - Nothing in the Tessallite workspace repo changes in Phases 1-3.
