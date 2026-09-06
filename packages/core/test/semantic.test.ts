@@ -159,3 +159,25 @@ describe('semantic rules', () => {
     expect(messages(doc)).toContainEqual(expect.stringContaining('R15 "kpi-card-trend" (icon) is a leaf type'));
   });
 });
+
+describe('rules tuned on the Tessallite Excel plugin', () => {
+  it('R24 a $ref instance may override condition', () => {
+    const doc = clone(example('containment'));
+    rawNode(doc, 'dashboard-status').condition = 'profiles.length > 0';
+    expect(validateDocument(doc).valid).toBe(true);
+  });
+
+  it('R4/R6 a repeated cell over a repeat column is supplied by the table data.columns', () => {
+    const doc = clone(example('containment'));
+    const table = rawNode(doc, 'results-table');
+    table.columns = [{ id: 'col-dynamic', repeat: true }];
+    table.data = { collection: 'rows', columns: 'headers' };
+    table.children = [
+      { id: 'dyn-header', type: 'row', props: { role: 'header' }, children: [{ id: 'dyn-header-cell', type: 'cell', column: 'col-dynamic', repeat: true }] },
+      { id: 'dyn-row', type: 'row', repeat: true, children: [{ id: 'dyn-cell', type: 'cell', column: 'col-dynamic', repeat: true }] },
+    ];
+    expect(validateDocument(doc).errors.map((e) => `${e.rule} ${e.message}`)).toEqual([]);
+    delete table.data.columns;
+    expect(validateDocument(doc).errors.map((e) => e.rule)).toEqual(['R4', 'R4']);
+  });
+});

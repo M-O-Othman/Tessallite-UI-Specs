@@ -44,7 +44,8 @@ producing help pages needs, and it is what this format records:
 - Behaviour that is both structured and readable. Every event has an
   `actions` list from a small vocabulary and an `effect` sentence, and names
   its real handler.
-- States that say which children exist.
+- States that say which children exist, and a `condition` on elements that
+  exist only under a runtime condition.
 
 ## Quick start
 

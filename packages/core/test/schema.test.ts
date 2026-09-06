@@ -109,6 +109,13 @@ describe('schema: invalid fixtures', () => {
     expect(errors).toContainEqual(expect.stringContaining("required property 'effect'"));
   });
 
+  it('accepts condition on a node and repeat on a column', () => {
+    const doc = clone(example('containment'));
+    rawNode(doc, 'dashboard-empty').condition = 'kpis.length === 0';
+    rawNode(doc, 'results-table').columns!.push({ id: 'col-extra', repeat: true });
+    expect(rules(doc)).toEqual([]);
+  });
+
   it('rejects visual fields: there is no width, colour or position', () => {
     const doc = clone(example('minimal'));
     Object.assign(rawNode(doc, 'settings-button'), { width: 120, color: '#fff' });

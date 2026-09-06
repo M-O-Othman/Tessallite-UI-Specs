@@ -18,13 +18,19 @@ the procedure.
    `icon` plus `label`. Group for structure only with `kind: logical`.
 4. Lists: one child with `repeat: true`; put `data.collection` on the parent.
    Tables: `columns` on the table, `column` on each cell, a header row with
-   `props.role: header`. Grids: `tracks` on the grid, `placement` on
+   `props.role: header`; columns that come from data are one column with
+   `repeat: true` plus `data.columns` on the table. Grids: `tracks` on the grid, `placement` on
    children. Overlays: children of the node that opens them, with
    `presentation: overlay`.
 5. Events: for every handler wired in the code, one Event with the real
    `handler` symbol, `actions` from `vocabulary/actions.md`, `target` when
    another node is affected, and an `effect` sentence that says what the
    user observes. Do not invent handlers.
+   When a leaf's handler is a prop passed through from a parent, write the
+   chain: `handler: "AppHeader.onOpenDrill -> App.handleOpenDrill"`. A node
+   rendered only under a condition (`profiles.length > 0`) carries
+   `condition`; use states with `present` for whole alternative renderings
+   (loading, empty, error), not for single optional elements.
 6. States: name the conditions the code renders differently (`loading`,
    `empty`, `error`, `selected`, `expanded`). Use `present` to list the
    children that exist in each.

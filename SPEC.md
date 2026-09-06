@@ -100,6 +100,7 @@ are OPTIONAL unless a rule below requires them.
 | `kind` | `visible` or `logical` | `visible` (default): the user sees or operates it. `logical`: a grouping that exists for structure only. |
 | `name` | string | Human name of the node for readers; not shown to the user. |
 | `description` | string | What the node is for. |
+| `condition` | string | When the node exists, if not always: a plain expression over runtime state, for example `profiles.length > 0`. |
 | `label` | string | The text the user sees or hears: the visible text of a text node, the caption of a button, the accessible name of an icon. |
 | `i18n` | string | Key of the string resource that supplies `label`, for example `app.title`. |
 | `icon` | string | URI of the icon shown, relative to the document unless absolute. SVG is RECOMMENDED. |
@@ -136,7 +137,9 @@ are OPTIONAL unless a rule below requires them.
 ### 6.3 Repetition
 
 - R4. A node with `repeat: true` is the item template of its parent. Its
-  parent MUST have `data.collection` naming what is iterated.
+  parent MUST have `data.collection` naming what is iterated, except that a
+  repeated `cell` naming a repeat column (R6) is supplied by the enclosing
+  table's `data.columns`.
 - R5. A node MUST NOT have more than one child with `repeat: true`. Variation
   between items is expressed by states on the template (section 8).
 
@@ -144,7 +147,10 @@ are OPTIONAL unless a rule below requires them.
 
 - R6. A `table` MUST declare `columns`, a non-empty array of Column: `id`
   (REQUIRED, unique within the table), `name`, `type`, `sortable`,
-  `description`. Columns are not nodes.
+  `description`, `repeat`. Columns are not nodes. A column with
+  `repeat: true` stands for N data-driven columns; the table then declares
+  `data.columns` naming what supplies them, and the cell that names the
+  column is the repeated cell of its row.
 - R7. A `row` MUST be a child of a `table`, or of a `logical` node whose
   nearest non-logical ancestor is a `table`. A header row is a `row` with
   `props: { "role": "header" }`.
@@ -216,6 +222,8 @@ state. States name conditions the node can be in; they are not visual styles.
 - R20. State names MUST be unique within one `states` array.
 - R21. Every id in `present` MUST be the id of a descendant of the node.
 - R22. A node with no `states` is in the `default` state only.
+- R22a. `present` and `condition` compose: a node listed in `present` for
+  the current state exists only if its `condition`, when given, also holds.
 
 Variants (visual styles a component exposes as a choice) are OpenUI props
 with `enum`, never states.
@@ -227,8 +235,9 @@ with `enum`, never states.
   `structures`.
 - R24. A `$ref` node stands for the referenced component's `structure` (or
   the referenced structure's `root`). It MAY override `id`, `name`, `label`,
-  `i18n`, `description`, `props`, `states`, `events`, `data`,
-  `implementation`, `slot`, `placement`, `repeat` and `presentation`. Its
+  `i18n`, `description`, `condition`, `kind`, `component`, `tokens`, `props`,
+  `states`, `events`, `data`, `implementation`, `slot`, `placement`, `repeat`
+  and `presentation`. Its
   `type` MUST equal the type of the referenced node.
 - R25. A `$ref` node MUST NOT have `children` other than slot fillers: every
   child MUST carry `slot`, and every such slot MUST be declared by the

@@ -2,7 +2,7 @@
 
 > An OpenUI extension that documents the structure and behaviour of a user interface as a single-parent tree of typed nodes with props, states, events and actions. Text only; no layout or visual fields. Version 0.1.
 
-A document is JSON or YAML with the OpenUI envelope (name, version, description, components) plus `structures`: named trees whose nodes have `id`, `type`, optional `kind` (visible or logical), `label`, `icon` (URI, label required), `component`, `$ref` (#/components/Name or #/structures/name), `props`, `data`, `a11y`, `tokens`, `states`, `events` (event, handler, actions, effect, target), `slots`/`slot`, `columns`/`column` (tables), `tracks`/`placement` (grids), `repeat` (item template), `presentation` (inline or overlay), `children`.
+A document is JSON or YAML with the OpenUI envelope (name, version, description, components) plus `structures`: named trees whose nodes have `id`, `type`, optional `kind` (visible or logical), `condition` (exists only when), `label`, `icon` (URI, label required), `component`, `$ref` (#/components/Name or #/structures/name), `props`, `data`, `a11y`, `tokens`, `states`, `events` (event, handler, actions, effect, target), `slots`/`slot`, `columns`/`column` (tables), `tracks`/`placement` (grids), `repeat` (item template), `presentation` (inline or overlay), `children`.
 
 Read in this order to author or consume a document:
 

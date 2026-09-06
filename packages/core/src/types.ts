@@ -32,6 +32,7 @@ export interface Column {
   type?: string;
   sortable?: boolean;
   description?: string;
+  repeat?: boolean;
 }
 
 export type TrackList = number | string[];
@@ -66,6 +67,7 @@ export interface Node {
   kind?: NodeKind;
   name?: string;
   description?: string;
+  condition?: string;
   label?: string;
   i18n?: string;
   icon?: string;

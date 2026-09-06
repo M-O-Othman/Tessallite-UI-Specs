@@ -1,6 +1,6 @@
 # Tessallite-UI-Specs v0.1 plan
 
-Status: approved decisions 2026-09-06; execution not started.
+Status: approved decisions 2026-09-06; Phases 1-4 executed 2026-09-06 (Excel document lives in the workspace, uncommitted, per D8).
 Repository: https://github.com/M-O-Othman/Tessallite-UI-Specs
 
 ## Goal

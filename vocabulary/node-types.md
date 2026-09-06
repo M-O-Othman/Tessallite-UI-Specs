@@ -35,7 +35,7 @@ type may sit. Rules marked MUST are enforced by the validator (SPEC R15);
 | `badge` | A small status or count marker. | `text`, `icon` | any |
 | `list` | An ordered set of items. Declares `data.collection` and one repeat `list-item`. | `list-item`, `group`, `text` | any |
 | `list-item` | One item of a list. | any | MUST be `list` |
-| `table` | Rows of cells under column definitions. Declares `columns` and `data.collection`. | `row`, logical groups of rows | any |
+| `table` | Rows of cells under column definitions. Declares `columns` and `data.collection`; `data.columns` when a column is `repeat`. | `row`, logical groups of rows | any |
 | `row` | One row of a table. Header rows carry `props.role: header`. | `cell` | MUST be `table` (or a `logical` node under one) |
 | `cell` | One cell of a row. `column` names its column. | any | MUST be `row` |
 | `grid` | Children arranged on named or counted tracks. Declares `tracks`; children carry `placement`. | any | any |

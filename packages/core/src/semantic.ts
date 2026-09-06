@@ -16,7 +16,7 @@ const REQUIRED_PARENT: Record<string, string[]> = {
 
 const OVERLAY_TYPES = new Set(['dialog', 'drawer', 'menu', 'tooltip', 'toast']);
 
-const REF_OVERRIDABLE = new Set(['id', 'type', '$ref', 'name', 'label', 'i18n', 'description', 'props', 'states', 'events', 'data', 'implementation', 'slot', 'placement', 'repeat', 'presentation', 'children', 'tokens', 'kind', 'component']);
+const REF_OVERRIDABLE = new Set(['id', 'type', '$ref', 'name', 'label', 'i18n', 'description', 'condition', 'props', 'states', 'events', 'data', 'implementation', 'slot', 'placement', 'repeat', 'presentation', 'children', 'tokens', 'kind', 'component']);
 
 function trackCount(list: TrackList): number {
   return typeof list === 'number' ? list : list.length;
@@ -33,6 +33,14 @@ function ancestorOfType(doc: SpecDocument, entry: IndexedNode, type: string): In
   let current = entry.parent;
   while (current && current.node.type !== type) current = current.parent;
   return current;
+}
+
+/** R4 exception: a repeated cell that names a repeat column is supplied by the table's data.columns. */
+function isRepeatColumnCell(doc: SpecDocument, entry: IndexedNode): boolean {
+  if (entry.node.type !== 'cell' || !entry.node.column) return false;
+  const table = ancestorOfType(doc, entry, 'table');
+  const column = table?.node.columns?.find((c) => c.id === entry.node.column);
+  return Boolean(column?.repeat && table?.node.data?.columns);
 }
 
 function isDescendant(entry: IndexedNode, id: string): boolean {
@@ -55,7 +63,7 @@ export function checkSemantics(doc: SpecDocument): Issue[] {
     // R4, R5: repetition
     const repeatChildren = entry.children.filter((c) => c.node.repeat === true);
     if (repeatChildren.length > 1) add('R5', entry, `"${node.id}" has ${repeatChildren.length} repeat children; at most one is allowed`);
-    if (repeatChildren.length === 1 && !node.data?.collection) add('R4', entry, `"${node.id}" has a repeat child but no data.collection`);
+    if (repeatChildren.length === 1 && !node.data?.collection && !isRepeatColumnCell(doc, repeatChildren[0])) add('R4', entry, `"${node.id}" has a repeat child but no data.collection`);
 
     // R6: unique column ids
     if (node.columns) {
