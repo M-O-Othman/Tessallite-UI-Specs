@@ -163,3 +163,14 @@ reference example as openui.json plus a narrative .md), packages/core
 (parse, validate, query), packages/cli, packages/mcp-server, llms.txt,
 AGENTS.md, README, LICENSE (MIT), CHANGELOG, CONTRIBUTING, and the draft
 upstream proposal (docs/upstream-proposal.md).
+
+## Follow-up questions (2026-09-06, during implementation)
+
+F1. `@types/node`. The TypeScript packages read files and command-line
+    arguments through Node's `node:fs`, `node:path`, `process` and `URL`.
+    Type declarations for those come from the `@types/node` package, which
+    was not on the approved dependency list, so v0.1 ships a 40-line ambient
+    shim (`types/node-shim.d.ts`) declaring only the surface used. Default
+    taken: the shim. Please confirm whether `@types/node` (dev-only, types
+    only) may replace it; if yes, the shim is deleted and the dev dependency
+    added in one commit.

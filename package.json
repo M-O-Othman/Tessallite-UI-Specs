@@ -1,0 +1,24 @@
+{
+  "name": "tessallite-ui-specs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tessallite-UI-Specs: an OpenUI extension for UI structure and behaviour, with a validator, a query CLI and a read-only MCP server.",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -b packages/core packages/cli packages/mcp-server",
+    "test": "vitest run",
+    "validate:examples": "node packages/cli/dist/index.js validate examples/minimal.json && node packages/cli/dist/index.js validate examples/containment.json",
+    "check": "npm run build && npm run validate:examples && npm test"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}
