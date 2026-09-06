@@ -1,0 +1,170 @@
+{
+  "name": "Containment example",
+  "version": "1.0.0",
+  "description": "A synthetic document that exercises every containment case: repeat templates, table with columns, grid with tracks and placement, slots, $ref reuse, overlay ownership, states, events and icons.",
+  "tuis": "0.1",
+  "components": {
+    "StatusBadge": {
+      "description": "A small badge that shows a connection status.",
+      "props": {
+        "status": { "type": "string", "description": "The status shown.", "enum": ["connected", "reconnecting", "disconnected"], "required": true },
+        "label": { "type": "string", "description": "The text of the badge." }
+      },
+      "states": ["default", { "name": "error", "description": "Status is disconnected." }],
+      "structure": {
+        "id": "status-badge",
+        "type": "badge",
+        "children": [
+          { "id": "status-badge-dot", "type": "icon", "icon": "icons/dot.svg", "label": "Status indicator" },
+          { "id": "status-badge-text", "type": "text", "label": "Connected" }
+        ]
+      }
+    },
+    "Dialog": {
+      "description": "A modal dialog with a title, a body and an actions row.",
+      "props": { "open": { "type": "boolean", "description": "Whether the dialog is shown.", "default": false } },
+      "events": [ { "name": "close", "description": "Emitted when the dialog asks to be closed." } ],
+      "slots": [
+        { "name": "title", "description": "The dialog title." },
+        { "name": "body", "description": "The dialog content." },
+        { "name": "actions", "description": "The dialog buttons." }
+      ],
+      "structure": {
+        "id": "dialog-frame",
+        "type": "dialog",
+        "presentation": "overlay",
+        "a11y": { "role": "dialog", "aria": { "modal": true } },
+        "children": [
+          { "id": "dialog-close", "type": "icon-button", "label": "Close", "events": [ { "event": "click", "actions": ["emit"], "emits": "close", "effect": "Asks the owner to close the dialog." } ] }
+        ]
+      }
+    }
+  },
+  "structures": {
+    "dashboard": {
+      "description": "A dashboard screen: a header with a status badge, a KPI card grid, a results table, and a confirm dialog owned by the screen.",
+      "root": {
+        "id": "dashboard",
+        "type": "container",
+        "name": "Dashboard screen",
+        "states": [
+          "default",
+          { "name": "loading", "description": "Data is being fetched.", "present": ["dashboard-header", "dashboard-skeleton"] },
+          { "name": "empty", "description": "No KPIs are defined.", "present": ["dashboard-header", "dashboard-empty"] }
+        ],
+        "children": [
+          {
+            "id": "dashboard-header",
+            "type": "container",
+            "a11y": { "role": "banner" },
+            "children": [
+              { "id": "dashboard-title", "type": "heading", "label": "Dashboard", "i18n": "dashboard.title" },
+              { "id": "dashboard-status", "$ref": "#/components/StatusBadge", "type": "badge", "props": { "status": "connected" }, "tokens": ["color.status.connected"] }
+            ]
+          },
+          { "id": "dashboard-skeleton", "type": "skeleton" },
+          { "id": "dashboard-empty", "type": "text", "label": "No KPIs yet. Add one from the library.", "i18n": "dashboard.empty" },
+          {
+            "id": "kpi-grid",
+            "type": "grid",
+            "name": "KPI card grid",
+            "tracks": { "columns": ["main", "side"], "rows": 2 },
+            "data": { "collection": "kpis" },
+            "children": [
+              {
+                "id": "kpi-card",
+                "type": "card",
+                "repeat": true,
+                "placement": { "column": "main" },
+                "data": { "item": "kpi" },
+                "states": ["default", { "name": "selected", "description": "The card the user last clicked." }],
+                "events": [ { "event": "click", "handler": "onSelectKpi", "actions": ["select"], "effect": "Marks this KPI as the current one and enables Insert." } ],
+                "children": [
+                  { "id": "kpi-card-name", "type": "text", "label": "{kpi.name}" },
+                  { "id": "kpi-card-value", "type": "text", "label": "{kpi.value}" },
+                  { "id": "kpi-card-trend", "type": "icon", "icon": "icons/trend-up.svg", "label": "Trend" }
+                ]
+              },
+              {
+                "id": "kpi-summary",
+                "type": "card",
+                "placement": { "column": "side", "row": 1, "rowSpan": 2 },
+                "children": [
+                  { "id": "kpi-summary-text", "type": "text", "label": "{kpis.length} KPIs" }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "results-table",
+            "type": "table",
+            "name": "Results",
+            "columns": [
+              { "id": "col-name", "name": "Name", "type": "string", "sortable": true },
+              { "id": "col-value", "name": "Value", "type": "number", "sortable": true },
+              { "id": "col-actions", "name": "", "type": "actions" }
+            ],
+            "data": { "collection": "rows" },
+            "children": [
+              {
+                "id": "results-header-row",
+                "type": "row",
+                "props": { "role": "header" },
+                "children": [
+                  { "id": "results-header-name", "type": "cell", "column": "col-name", "children": [ { "id": "results-header-name-text", "type": "text", "label": "Name" } ], "events": [ { "event": "click", "handler": "onSort", "actions": ["sort"], "target": "results-table", "effect": "Sorts the table by name." } ] },
+                  { "id": "results-header-value", "type": "cell", "column": "col-value", "children": [ { "id": "results-header-value-text", "type": "text", "label": "Value" } ] },
+                  { "id": "results-header-actions", "type": "cell", "column": "col-actions" }
+                ]
+              },
+              {
+                "id": "results-row",
+                "type": "row",
+                "repeat": true,
+                "data": { "item": "row" },
+                "children": [
+                  { "id": "results-cell-name", "type": "cell", "column": "col-name", "children": [ { "id": "results-cell-name-text", "type": "text", "label": "{row.name}" } ] },
+                  { "id": "results-cell-value", "type": "cell", "column": "col-value", "children": [ { "id": "results-cell-value-text", "type": "text", "label": "{row.value}" } ] },
+                  {
+                    "id": "results-cell-actions",
+                    "type": "cell",
+                    "column": "col-actions",
+                    "children": [
+                      {
+                        "id": "results-delete-button",
+                        "type": "icon-button",
+                        "label": "Delete",
+                        "events": [ { "event": "click", "handler": "onAskDelete", "actions": ["open"], "target": "confirm-delete", "effect": "Opens the delete confirmation dialog." } ],
+                        "children": [ { "id": "results-delete-icon", "type": "icon", "icon": "icons/delete.svg", "label": "Delete" } ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "confirm-delete",
+            "$ref": "#/components/Dialog",
+            "type": "dialog",
+            "presentation": "overlay",
+            "name": "Delete confirmation",
+            "states": ["closed", "open"],
+            "children": [
+              { "id": "confirm-delete-title", "type": "heading", "slot": "title", "label": "Delete row?" },
+              { "id": "confirm-delete-body", "type": "text", "slot": "body", "label": "This cannot be undone." },
+              {
+                "id": "confirm-delete-actions",
+                "type": "group",
+                "slot": "actions",
+                "children": [
+                  { "id": "confirm-delete-cancel", "type": "button", "label": "Cancel", "events": [ { "event": "click", "handler": "onCancel", "actions": ["close"], "target": "confirm-delete", "effect": "Closes the dialog without deleting." } ] },
+                  { "id": "confirm-delete-ok", "type": "button", "label": "Delete", "props": { "variant": "primary" }, "events": [ { "event": "click", "handler": "onConfirmDelete", "actions": ["remove", "close", "refresh"], "target": "results-table", "effect": "Deletes the row, closes the dialog and refreshes the table." } ] }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

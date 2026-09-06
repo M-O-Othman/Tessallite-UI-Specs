@@ -1,0 +1,57 @@
+{
+  "name": "Minimal example",
+  "version": "1.0.0",
+  "description": "The smallest useful Tessallite-UI-Specs document: one component and one structure with a button that owns a menu.",
+  "tuis": "0.1",
+  "components": {
+    "Button": {
+      "description": "A clickable button element.",
+      "props": {
+        "variant": { "type": "string", "description": "The visual style of the button.", "enum": ["primary", "secondary"] }
+      },
+      "events": [ { "name": "click", "description": "Emitted when the button is activated." } ]
+    }
+  },
+  "structures": {
+    "settings-bar": {
+      "description": "A bar with a settings button that opens a two-item menu.",
+      "root": {
+        "id": "bar",
+        "type": "container",
+        "name": "Settings bar",
+        "children": [
+          {
+            "id": "settings-button",
+            "type": "icon-button",
+            "component": "Button",
+            "label": "Settings",
+            "props": { "variant": "secondary" },
+            "children": [
+              { "id": "settings-icon", "type": "icon", "icon": "icons/settings.svg", "label": "Settings" },
+              {
+                "id": "settings-menu",
+                "type": "menu",
+                "presentation": "overlay",
+                "children": [
+                  {
+                    "id": "settings-menu-diagnostics",
+                    "type": "menu-item",
+                    "label": "Diagnostics",
+                    "events": [ { "event": "click", "handler": "onOpenDiagnostics", "actions": ["close", "open"], "effect": "Closes the menu and opens the diagnostics panel." } ]
+                  },
+                  {
+                    "id": "settings-menu-sign-out",
+                    "type": "menu-item",
+                    "label": "Sign out",
+                    "events": [ { "event": "click", "handler": "onLogout", "actions": ["close", "call"], "effect": "Closes the menu and signs the user out." } ]
+                  }
+                ]
+              }
+            ],
+            "events": [ { "event": "click", "actions": ["open"], "target": "settings-menu", "effect": "Opens the settings menu." } ]
+          }
+        ]
+      }
+    }
+  }
+}

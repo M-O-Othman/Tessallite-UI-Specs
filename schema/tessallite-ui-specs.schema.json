@@ -1,0 +1,303 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/M-O-Othman/Tessallite-UI-Specs/schema/tessallite-ui-specs.schema.json",
+  "title": "Tessallite-UI-Specs document",
+  "description": "An OpenUI document (name, version, description, components) extended with structures: single-parent trees of typed nodes that document the containment and behaviour of a user interface. No layout or visual fields exist in this schema.",
+  "type": "object",
+  "required": ["name", "version", "description", "components"],
+  "properties": {
+    "name": { "type": "string", "description": "OpenUI: name of the UI library or product." },
+    "version": { "type": "string", "description": "OpenUI: version of the UI library or product." },
+    "description": { "type": "string", "description": "OpenUI: overview of the UI library or product." },
+    "license": { "type": "string", "description": "OpenUI (as used by published specifications): licence of the library." },
+    "tuis": { "type": "string", "description": "Version of the Tessallite-UI-Specs specification this document follows. Use \"0.1\".", "enum": ["0.1"] },
+    "components": {
+      "type": "object",
+      "description": "OpenUI: component definitions keyed by component name.",
+      "additionalProperties": { "$ref": "#/$defs/Component" }
+    },
+    "structures": { "$ref": "#/$defs/Structures" },
+    "x-structures": { "$ref": "#/$defs/Structures" }
+  },
+  "not": { "required": ["structures", "x-structures"] },
+  "additionalProperties": true,
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "description": "An identifier: a letter followed by letters, digits, underscore, dot, colon or hyphen.",
+      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
+    },
+    "Structures": {
+      "type": "object",
+      "description": "Structures keyed by structure name. Each is one screen, surface or reusable subtree with a single root node.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["description", "root"],
+        "properties": {
+          "description": { "type": "string", "description": "What this structure is: the screen or surface it documents." },
+          "root": { "$ref": "#/$defs/Node" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "Component": {
+      "type": "object",
+      "description": "OpenUI component definition with the extension fields events, states, slots and structure (or their x- forms).",
+      "required": ["description"],
+      "properties": {
+        "package": { "type": "string", "description": "OpenUI: package or module where the component is located." },
+        "group": { "type": "string", "description": "OpenUI (as used by published specifications): grouping of the component." },
+        "description": { "type": "string", "description": "OpenUI: component overview." },
+        "example": { "type": "string", "description": "OpenUI: example usage of the component." },
+        "props": {
+          "type": "object",
+          "description": "OpenUI: map of prop name to a type string or a Prop object.",
+          "additionalProperties": { "$ref": "#/$defs/Prop" }
+        },
+        "events": { "$ref": "#/$defs/EventDefinitions" },
+        "x-events": { "$ref": "#/$defs/EventDefinitions" },
+        "states": { "$ref": "#/$defs/States" },
+        "x-states": { "$ref": "#/$defs/States" },
+        "slots": { "$ref": "#/$defs/Slots" },
+        "x-slots": { "$ref": "#/$defs/Slots" },
+        "structure": { "$ref": "#/$defs/Node" },
+        "x-structure": { "$ref": "#/$defs/Node" }
+      },
+      "allOf": [
+        { "not": { "required": ["events", "x-events"] } },
+        { "not": { "required": ["states", "x-states"] } },
+        { "not": { "required": ["slots", "x-slots"] } },
+        { "not": { "required": ["structure", "x-structure"] } }
+      ],
+      "additionalProperties": true
+    },
+    "Prop": {
+      "description": "OpenUI prop: a type string, or an object with type, description, default, enum, required (plus items and properties for array and object types).",
+      "oneOf": [
+        { "type": "string", "description": "The prop's data type, as a shorthand for an object with only type." },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "description": "OpenUI: data type of the prop (string, boolean, number, array, object, or a named type)." },
+            "description": { "type": "string", "description": "OpenUI: explanation of the prop's purpose and usage." },
+            "default": { "description": "OpenUI: default value when the prop is omitted." },
+            "enum": { "type": "array", "description": "OpenUI: allowable values of an enumerated prop.", "items": {} },
+            "required": { "type": "boolean", "description": "OpenUI: whether the prop must be provided." },
+            "items": { "description": "Item shape when type is array (as used by published OpenUI specifications)." },
+            "properties": { "type": "object", "description": "Field shapes when type is object (as used by published OpenUI specifications)." }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "EventDefinitions": {
+      "type": "array",
+      "description": "Events the component emits, in Custom Elements Manifest shape.",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "description": "Event name as emitted, for example change or onSelect." },
+          "description": { "type": "string", "description": "When the event is emitted and what it carries." },
+          "type": { "type": "string", "description": "Type of the event payload, for example CustomEvent<Persona> or (id: string) => void." }
+        },
+        "additionalProperties": false
+      }
+    },
+    "Slots": {
+      "type": "array",
+      "description": "Named insertion points a component or node accepts. The empty-string name is the default slot.",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "description": "Slot name. Empty string for the default slot." },
+          "description": { "type": "string", "description": "What belongs in the slot." }
+        },
+        "additionalProperties": false
+      }
+    },
+    "StateName": {
+      "type": "string",
+      "description": "A state from vocabulary/states.md or custom:<name>.",
+      "anyOf": [
+        { "enum": ["default", "loading", "streaming", "error", "empty", "disabled", "readonly", "required", "invalid", "selected", "checked", "indeterminate", "pressed", "expanded", "collapsed", "open", "closed", "active", "focused", "hover", "dragging", "dropping", "editing", "pending", "success", "hidden", "offline", "online"] },
+        { "pattern": "^custom:[A-Za-z][A-Za-z0-9_-]*$" }
+      ]
+    },
+    "States": {
+      "type": "array",
+      "description": "States the node or component can take. Each entry is a state name or an object with name, description and present.",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/StateName" },
+          {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": { "$ref": "#/$defs/StateName" },
+              "description": { "type": "string", "description": "When the node is in this state and what it shows." },
+              "present": { "type": "array", "description": "Ids of the descendants that exist in this state; descendants not listed are absent.", "items": { "$ref": "#/$defs/Identifier" }, "uniqueItems": true }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "Action": {
+      "type": "string",
+      "description": "An action from vocabulary/actions.md or custom:<name>.",
+      "anyOf": [
+        { "enum": ["navigate", "open", "close", "toggle", "select", "set-state", "submit", "call", "emit", "copy", "insert", "refresh", "focus", "remove", "filter", "sort", "move"] },
+        { "pattern": "^custom:[A-Za-z][A-Za-z0-9_-]*$" }
+      ]
+    },
+    "Event": {
+      "type": "object",
+      "description": "What happens when the user or the system acts on a node.",
+      "required": ["event", "actions", "effect"],
+      "properties": {
+        "event": { "type": "string", "description": "The trigger: click, change, submit, keydown, open, close, drop, hover, focus, or a custom name.", "minLength": 1 },
+        "handler": { "type": "string", "description": "The symbol in code that handles the event, for example onOpenDrill or handleKeyDown." },
+        "actions": { "type": "array", "description": "One or more actions, in order, from vocabulary/actions.md.", "items": { "$ref": "#/$defs/Action" }, "minItems": 1 },
+        "effect": { "type": "string", "description": "What the user observes, in one or two sentences.", "minLength": 1 },
+        "target": { "$ref": "#/$defs/Identifier", "description": "Id of the node the action acts on, when it is another node." },
+        "emits": { "type": "string", "description": "Name of the component event raised, required when actions contains emit." },
+        "keys": { "type": "array", "description": "Keys that trigger the event when event is keydown, for example ArrowRight or Enter.", "items": { "type": "string" } },
+        "condition": { "type": "string", "description": "When the event applies, if not always." }
+      },
+      "additionalProperties": false
+    },
+    "Implementation": {
+      "type": "object",
+      "description": "Where the node lives in code.",
+      "properties": {
+        "technology": { "type": "string", "description": "The technology, for example react, web-component, swiftui." },
+        "file": { "type": "string", "description": "Source file path relative to the repository root." },
+        "symbol": { "type": "string", "description": "Exported symbol or function that renders the node." },
+        "tag": { "type": "string", "description": "Element or tag name rendered, for example header, nav, MuiIconButton." }
+      },
+      "additionalProperties": false
+    },
+    "Column": {
+      "type": "object",
+      "description": "A column definition on a table. Columns are not nodes; cells reference them by id.",
+      "required": ["id"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Identifier", "description": "Column id, unique within the table." },
+        "name": { "type": "string", "description": "Column header text as the user sees it." },
+        "type": { "type": "string", "description": "Data type of the column values: string, number, date, boolean, or a named type." },
+        "sortable": { "type": "boolean", "description": "Whether the user can sort by this column." },
+        "description": { "type": "string", "description": "What the column holds." }
+      },
+      "additionalProperties": false
+    },
+    "TrackList": {
+      "description": "A count of tracks, or an array of unique track names. Never a size.",
+      "oneOf": [
+        { "type": "integer", "minimum": 1, "description": "Number of tracks." },
+        { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/Identifier" }, "description": "Track names in order." }
+      ]
+    },
+    "Tracks": {
+      "type": "object",
+      "description": "The tracks of a grid: columns (required) and rows (optional).",
+      "required": ["columns"],
+      "properties": {
+        "columns": { "$ref": "#/$defs/TrackList", "description": "Column tracks." },
+        "rows": { "$ref": "#/$defs/TrackList", "description": "Row tracks." }
+      },
+      "additionalProperties": false
+    },
+    "TrackRef": {
+      "description": "A track by 1-based index or by name.",
+      "oneOf": [
+        { "type": "integer", "minimum": 1 },
+        { "$ref": "#/$defs/Identifier" }
+      ]
+    },
+    "Placement": {
+      "type": "object",
+      "description": "Where a child of a grid sits: column and row by index or name, and how many tracks it spans.",
+      "properties": {
+        "column": { "$ref": "#/$defs/TrackRef", "description": "Starting column track." },
+        "row": { "$ref": "#/$defs/TrackRef", "description": "Starting row track." },
+        "columnSpan": { "type": "integer", "minimum": 1, "description": "Number of column tracks spanned." },
+        "rowSpan": { "type": "integer", "minimum": 1, "description": "Number of row tracks spanned." }
+      },
+      "additionalProperties": false
+    },
+    "A11y": {
+      "type": "object",
+      "description": "Accessibility facts: role, ARIA attributes and keyboard behaviour.",
+      "properties": {
+        "role": { "type": "string", "description": "The accessibility role, for example banner, tablist, alert, dialog." },
+        "aria": { "type": "object", "description": "ARIA attributes by name (without the aria- prefix or with it), value as text.", "additionalProperties": { "description": "Attribute value as text, boolean or number.", "anyOf": [ { "type": "string" }, { "type": "boolean" }, { "type": "number" } ] } },
+        "keyboard": {
+          "type": "array",
+          "description": "Keyboard interactions the node supports.",
+          "items": {
+            "type": "object",
+            "required": ["key", "effect"],
+            "properties": {
+              "key": { "type": "string", "description": "The key or key combination, for example ArrowRight, Enter, Ctrl+Enter." },
+              "effect": { "type": "string", "description": "What the key does." }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "NodeType": {
+      "type": "string",
+      "description": "A node type from vocabulary/node-types.md or custom:<name>.",
+      "anyOf": [
+        { "enum": ["container", "group", "text", "heading", "icon", "image", "link", "button", "icon-button", "toggle", "input", "textarea", "select", "combobox", "checkbox", "radio-group", "radio", "switch", "slider", "tablist", "tab", "tabpanel", "chip", "badge", "list", "list-item", "table", "row", "cell", "grid", "card", "dialog", "drawer", "menu", "menu-item", "tooltip", "toast", "banner", "progress", "skeleton", "chart", "divider", "form"] },
+        { "pattern": "^custom:[A-Za-z][A-Za-z0-9_-]*$" }
+      ]
+    },
+    "Node": {
+      "type": "object",
+      "description": "One node of a structure tree. Every node has an id and a type; everything else is optional. Containment is the only positional information.",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Identifier", "description": "Identifier unique across the whole document." },
+        "type": { "$ref": "#/$defs/NodeType", "description": "What the node is." },
+        "kind": { "type": "string", "enum": ["visible", "logical"], "default": "visible", "description": "visible: the user sees or operates it. logical: a grouping that exists for structure only." },
+        "name": { "type": "string", "description": "Human name of the node for readers of the document; not shown to the user." },
+        "description": { "type": "string", "description": "What the node is for." },
+        "label": { "type": "string", "description": "The text the user sees or hears: visible text, caption, or the accessible name of an icon. Required on icon, icon-button, image and chart." },
+        "i18n": { "type": "string", "description": "Key of the string resource that supplies label, for example app.title." },
+        "icon": { "type": "string", "description": "URI of the icon shown, relative to the document unless absolute. SVG recommended.", "format": "uri-reference" },
+        "component": { "type": "string", "description": "Name of the component in components that this node is an instance of." },
+        "$ref": { "type": "string", "description": "Reuse: #/components/<Name> or #/structures/<name>. The node stands for the referenced structure and may override its fields.", "pattern": "^#/(components|structures)/[^/]+$" },
+        "props": { "type": "object", "description": "Prop values for this instance, keyed by prop name.", "additionalProperties": true },
+        "implementation": { "type": "array", "description": "Where the node lives in code.", "items": { "$ref": "#/$defs/Implementation" } },
+        "data": { "type": "object", "description": "Data bindings: binding name to expression. collection names the collection a repeat child iterates.", "additionalProperties": { "type": "string" } },
+        "a11y": { "$ref": "#/$defs/A11y" },
+        "tokens": { "type": "array", "description": "W3C Design Token names the node references. Names only, never values.", "items": { "type": "string" }, "uniqueItems": true },
+        "states": { "$ref": "#/$defs/States" },
+        "events": { "type": "array", "description": "What happens when the user or the system acts on this node.", "items": { "$ref": "#/$defs/Event" } },
+        "slots": { "$ref": "#/$defs/Slots" },
+        "slot": { "type": "string", "description": "The slot of the parent that this node fills." },
+        "columns": { "type": "array", "description": "Column definitions. Only on a table.", "items": { "$ref": "#/$defs/Column" }, "minItems": 1 },
+        "column": { "$ref": "#/$defs/Identifier", "description": "The column this cell belongs to. Only on a cell." },
+        "tracks": { "$ref": "#/$defs/Tracks", "description": "Grid tracks. Only on a grid." },
+        "placement": { "$ref": "#/$defs/Placement", "description": "Position in the parent grid. Only on a direct child of a grid." },
+        "repeat": { "type": "boolean", "description": "This node is the item template of its parent and stands for N instances." },
+        "presentation": { "type": "string", "enum": ["inline", "overlay"], "default": "inline", "description": "overlay: the node floats over its owner rather than sitting inside its flow." },
+        "children": { "type": "array", "description": "Contained nodes in document order.", "items": { "$ref": "#/$defs/Node" } }
+      },
+      "allOf": [
+        { "if": { "properties": { "type": { "enum": ["icon", "icon-button", "image", "chart"] } } }, "then": { "required": ["label"] } },
+        { "if": { "properties": { "type": { "const": "table" } } }, "then": { "required": ["columns"] } },
+        { "if": { "properties": { "type": { "const": "grid" } } }, "then": { "required": ["tracks"] } },
+        { "if": { "properties": { "type": { "const": "cell" } } }, "then": { "required": ["column"] } },
+        { "if": { "properties": { "type": { "enum": ["dialog", "drawer", "menu", "tooltip", "toast"] } } }, "then": { "required": ["presentation"], "properties": { "presentation": { "const": "overlay" } } } },
+        { "if": { "properties": { "kind": { "const": "logical" } }, "required": ["kind"] }, "then": { "not": { "anyOf": [ { "required": ["label"] }, { "required": ["icon"] }, { "required": ["events"] }, { "required": ["a11y"] } ] } } }
+      ],
+      "additionalProperties": false
+    }
+  }
+}
