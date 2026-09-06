@@ -1,0 +1,37 @@
+# Tessallite-UI-Specs
+
+> An OpenUI extension that documents the structure and behaviour of a user interface as a single-parent tree of typed nodes with props, states, events and actions. Text only; no layout or visual fields. Version 0.1.
+
+A document is JSON or YAML with the OpenUI envelope (name, version, description, components) plus `structures`: named trees whose nodes have `id`, `type`, optional `kind` (visible or logical), `label`, `icon` (URI, label required), `component`, `$ref` (#/components/Name or #/structures/name), `props`, `data`, `a11y`, `tokens`, `states`, `events` (event, handler, actions, effect, target), `slots`/`slot`, `columns`/`column` (tables), `tracks`/`placement` (grids), `repeat` (item template), `presentation` (inline or overlay), `children`.
+
+Read in this order to author or consume a document:
+
+- [Specification](SPEC.md): document layout, node fields, rules R1-R26.
+- [JSON Schema](schema/tessallite-ui-specs.schema.json): every field with a description; validate with `tuis validate`.
+- [Node types](vocabulary/node-types.md): what each type means and what it may contain.
+- [Actions](vocabulary/actions.md): the event action vocabulary.
+- [States](vocabulary/states.md): the state vocabulary and `present`.
+- [Agent guide](AGENTS.md): authoring procedure, consumption via the CLI and the MCP server.
+
+## Examples
+
+- [minimal.json](examples/minimal.json): one component, one structure, a button that owns a menu.
+- [containment.json](examples/containment.json): repeat templates, table with columns, grid with tracks and placement, slots, $ref, overlay ownership, states.
+
+## Mappings
+
+- [Custom Elements Manifest](mappings/cem.md)
+- [W3C Design Tokens](mappings/design-tokens.md)
+- [Storybook manifest](mappings/storybook-manifest.md)
+- [react-docgen](mappings/react-docgen.md)
+
+## Tooling
+
+- CLI: `tuis validate <file>`; `tuis query <file> structures|tree|node|find|path-to|events-of|children-of`.
+- MCP server (stdio, read-only): list_structures, get_tree, get_node, find, path_to, events_of, children_of, validate.
+
+## Optional
+
+- [Upstream proposal](docs/upstream-proposal.md)
+- [Open questions and decisions](docs/questions_ui-spec-open-questions.md)
+- [Change log](CHANGELOG.md)
