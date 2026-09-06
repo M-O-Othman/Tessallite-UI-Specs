@@ -1,7 +1,20 @@
 # Open questions: an OpenUI extension for UI structure and behaviour
 
-Status: rewritten 2026-09-06 after the positioning discussion. Awaiting
-answers; no spec text or code until settled.
+Status: answered 2026-09-06. Decisions recorded in work/tessallite-ui-specs-plan.md.
+
+## Answers (2026-09-06)
+
+- Name: Tessallite-UI-Specs (repository github.com/M-O-Othman/Tessallite-UI-Specs).
+- Publish: now, public.
+- Upstream: independent extension; a PR to ctate/openui only later, no
+  proposal issue now.
+- Licence: none for now; a public repository without a LICENSE file.
+- Worked example: postponed until the format has been tested and tuned on
+  the Tessallite Excel plugin.
+- Extension style: plain field names (`structures`, `events`, `states`,
+  `slots`), with the `x-` form accepted by the validator (default applied;
+  user asked for a plain-language explanation, none objected).
+- Everything else: defaults as listed in the plan.
 
 ## What this is, and is not
 
