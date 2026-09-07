@@ -2,6 +2,7 @@ import { buildModel, countsByType, DEFAULT_FILTERS, expandedToDepth, expandPaths
 import { layoutForest } from './layout.js';
 import { createGraph } from './graph.js';
 import { renderInspector } from './detail.js';
+import { cardPresentation } from './card-content.js';
 import { parseInput, validateInput } from './validation.js';
 import viewerConfig from './viewer-config.json' with { type: 'json' };
 
@@ -50,17 +51,19 @@ function scopeRoot(root) { return !state.structureFilter || root.entry?.owner ==
 
 function buildScene() {
   const forest = visibleForest(state.model, state.view, state.filters, state.expanded, scopeRoot);
-  const positions = layoutForest(forest.nodes, forest.edges);
   const cards = forest.nodes.map((item) => {
     const v = item.vnode;
-    const n = v.entry?.node || v.node;
+    const presentation = cardPresentation(v, state.model);
+    const n = presentation.node;
     return {
-      id: item.id, lines: v.lines, badge: v.badge || '',
+      ...presentation, id: item.id, badge: v.badge || '',
+      height: presentation.preview ? viewerConfig.card.content.previewHeight : viewerConfig.card.layout.height,
       toggle: item.hasChildren ? (item.collapsed ? '+' : '−') : '',
       classes: [v.kind, n?.kind === 'logical' ? 'logical' : '', n?.presentation === 'overlay' ? 'overlay' : '', state.selected === item.id ? 'selected' : '', state.hits.has(item.id) ? 'hit' : ''].filter(Boolean).join(' '),
-      ariaLabel: v.lines.join(', '), expanded: item.hasChildren ? !item.collapsed : undefined,
+      expanded: item.hasChildren ? !item.collapsed : undefined,
     };
   });
+  const positions = layoutForest(cards, forest.edges);
   return { positions, cards, edges: forest.edges, items: forest.nodes };
 }
 

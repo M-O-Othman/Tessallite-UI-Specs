@@ -34,5 +34,5 @@ Read in this order to author or consume a document:
 ## Optional
 
 - [Upstream proposal](docs/upstream-proposal.md)
-- [Open questions and decisions](docs/questions_ui-spec-open-questions.md)
+- [Open questions and decisions](docs/questions/ui-spec-open-questions.md)
 - [Change log](CHANGELOG.md)

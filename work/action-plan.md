@@ -1,6 +1,22 @@
 # Viewer and schema repair
 
-Status: implementation and automated checks complete; browser verification pending, 2026-09-07. User approved committing and pushing the current repair. Continues `tessallite-ui-specs-plan.md` and session `2026-09-07-054213.md`.
+Current task: consolidate documentation under one lowercase `docs/` tree and
+remove duplicate navigation paths before committing. The delivered README and
+project guide are recorded in `work/documentation-plan.md`. Viewer card
+icons/static text are recorded in `work/viewer-card-content-plan.md`; web
+application delivery in `work/web-application-spec-plan.md`. Repair history
+follows.
+
+Status: documentation housekeeping complete; browser verification pending,
+2026-09-07. User approved committing and pushing after housekeeping. Continues
+`tessallite-ui-specs-plan.md` and session `2026-09-07-172551.md`.
+
+## Documentation housekeeping tasks
+
+- [x] Use one canonical lowercase `docs/` directory for guides and issue logs.
+- [x] Move question documents under `docs/questions/` and update every link.
+- [x] Keep one documentation index and remove stale `Docs/` navigation.
+- [x] Run link, build and test checks; record the browser gate without hiding it.
 
 ## Tasks
 

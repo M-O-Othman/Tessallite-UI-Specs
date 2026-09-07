@@ -2,6 +2,11 @@
 
 Status: blocked on the Browser plugin connection, 2026-09-07.
 
+Card-icon/static-text follow-up: browser selection was retried on 2026-09-07
+at 14:46 local time. Selection reported `No browser is available`; supported
+discovery returned an empty list. Automated export checks pass, but desktop
+and narrow-width rendering of icons and longer text still needs this connection.
+
 The Chrome extension is installed and enabled. Its native-host manifest is
 missing at `/home/oz/.config/google-chrome/NativeMessagingHosts/com.openai.codexextension.json`.
 The browser runtime reports no connected browser.

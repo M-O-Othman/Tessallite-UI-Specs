@@ -5,6 +5,19 @@ const nodes = ['r', 'a', 'b', 'c', 'd', 'e'].map((id) => ({ id }));
 const edges = [{ from: 'r', to: 'a' }, { from: 'r', to: 'b' }, { from: 'a', to: 'c' }, { from: 'a', to: 'd' }, { from: 'b', to: 'e' }];
 
 describe('layout', () => {
+  it('reserves full height for text previews, including tall parents above short children', () => {
+    const items = [{ id: 'r', height: 108 }, { id: 'a', height: 180 }, { id: 'b', height: 76 }, { id: 'c', height: 76 }, { id: 'd', height: 108 }];
+    const links = [{ from: 'r', to: 'a' }, { from: 'r', to: 'b' }, { from: 'a', to: 'c' }, { from: 'b', to: 'd' }];
+    const positions = layoutForest(items, links);
+    for (const item of items) expect(positions.get(item.id)!.height).toBe(item.height);
+    const all = [...positions.values()];
+    for (const p of all) expect(p.y).toBeGreaterThanOrEqual(0);
+    for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++) expect(overlaps(all[i], all[j])).toBe(false);
+    for (const link of links.filter((l) => l.from !== 'r')) {
+      const parent = positions.get(link.from)!; const child = positions.get(link.to)!;
+      expect(parent.y + parent.height / 2).toBe(child.y + child.height / 2);
+    }
+  });
   it('places depth on x and stacks leaves without overlap', () => {
     const p = layoutForest(nodes, edges);
     expect(p.get('r')!.x).toBe(0);

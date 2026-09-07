@@ -1,207 +1,302 @@
-# Tessallite-UI-Specs
+# Tessallite UI Specifications
 
-An extension of [OpenUI](https://openuispec.org) that documents the structure
-and behaviour of a product's user interface: which element contains which,
-what each element is, what it shows, what happens when the user acts on it,
-and which states it can take. It is text only, renders nothing and carries no
-visual information. Design tools, documentation tools and AI coding agents
-read it; a validator, a query CLI and a read-only MCP server ship with it.
+Tessallite UI Specifications is a small language for describing a user
+interface in a way that both people and programs can understand.
 
-Format version 0.1; tooling version 0.2. Specification: [SPEC.md](SPEC.md). Schema:
+Think of it as a building plan for an app:
+
+- a **component** is a reusable part, such as a button or a dialog;
+- a **structure** is one screen or surface;
+- a **node** is one thing in that screen;
+- a **child** is a thing inside another thing;
+- an **event** says what happens after an action;
+- a **state** says what can change, such as loading or selected.
+
+The project does not build or run the product being described. It records the
+product's shape and behaviour. That makes the same document useful to a
+designer, a writer, a test tool and an AI coding assistant.
+
+The format extends the component envelope from
+[OpenUI](https://openuispec.org). The format rules live in
+[SPEC.md](SPEC.md), and the machine-readable rules live in
 [schema/tessallite-ui-specs.schema.json](schema/tessallite-ui-specs.schema.json).
 
-## What it adds to OpenUI
+## See it first
 
-OpenUI describes a component library: `name`, `version`, `description` and a
-`components` map with typed `props`. It has no containment, no slots, no
-events, no states and no JSON Schema. Tessallite-UI-Specs keeps the OpenUI
-envelope verbatim and adds:
+The viewer turns a document into a readable graph. Cards use small, embedded
+line icons to show what they represent. Cards with literal captions show a
+short text preview; selecting a card shows the complete text in the inspector.
 
-- `structures` at the top level: single-parent trees of typed nodes, one per
-  screen or surface;
-- `events`, `states`, `slots` and `structure` on a component definition;
-- a JSON Schema for the whole document, where every field carries a
-  description so that an agent can author from the schema alone;
-- semantic rules the schema cannot express (unique IDs, `$ref` targets,
-  table and grid relationships, slot declarations and event targets), enforced
-  by the validator.
+![The Structures view showing a screen, controls, text previews and semantic icons.](docs/screenshots/viewer-structure.png)
 
-Nothing OpenUI defines is changed. A tool that knows only OpenUI reads the
-envelope and ignores the rest.
+*The Structures view follows the real containment tree. A card can be a window,
+button, text node, dialog, group or another documented type.*
 
-## Why
+![A selected text card with its static text in the inspector.](docs/screenshots/viewer-inspector.png)
 
-A screenshot shows a UI; a component library lists its parts; neither says
-how the parts nest, what a click does, or what the empty state contains. That
-is what a coding agent, a design tool building a wireframe, or a writer
-producing help pages needs, and it is what this format records:
+*The inspector gives the selected node's purpose, identity, static text,
+behaviour and source link.*
 
-- Containment, not layout. A table is the parent of rows; a row of cells; a
-  tab list of tabs; a button of the menu it opens. No sizes, colours or
-  coordinates.
-- Repetition by template. A list declares one item template with
-  `repeat: true`; a reader sees the shape once.
-- Behaviour that is both structured and readable. Every event has an
-  `actions` list from a small vocabulary and an `effect` sentence, and names
-  its real handler.
-- States that say which children exist, and a `condition` on elements that
-  exist only under a runtime condition.
+![The web application specification opened in the viewer.](docs/screenshots/viewer-web-application.png)
 
-## Quick start
+*The same viewer can open a large source-derived application document. It starts
+small and expands branches as you explore them.*
 
-Requires Node 22.
+More screenshot notes and alt text are in
+[docs/screenshots.md](docs/screenshots.md). The images are examples of the
+viewer, not part of the specification format.
+
+## Start here
+
+Use a Node.js release that satisfies the `engines.node` entry in `package.json`.
 
 ```sh
 git clone https://github.com/M-O-Othman/Tessallite-UI-Specs.git
 cd Tessallite-UI-Specs
 npm install
-npm run build
+npm run check
+```
+
+`npm run check` builds the TypeScript packages, builds the offline viewer,
+validates the example documents and runs the test suite.
+
+Validate a document:
+
+```sh
 node packages/cli/dist/index.js validate examples/containment.json
-node packages/cli/dist/index.js query examples/containment.json path-to results-cell-value-text
-node packages/cli/dist/index.js query examples/containment.json find --event onConfirmDelete
 ```
 
-Serve a document to an agent over MCP (stdio):
+Open a document in the visualiser:
 
 ```sh
-node packages/mcp-server/dist/index.js examples/containment.json
+node packages/cli/dist/index.js view examples/containment.json --out /tmp/containment.html
 ```
 
-Claude Code registration, for example:
+Open `/tmp/containment.html` in a browser. The page is self-contained: it has
+the document, the validator, the graph and the styles inside one file.
 
-```sh
-claude mcp add tuis -- node /path/to/packages/mcp-server/dist/index.js /path/to/your.openui.json
-```
+## The five pieces
 
-Tools: `list_structures`, `get_tree`, `get_node`, `find`, `path_to`,
-`events_of`, `children_of`, `validate`. All read-only.
+| Piece | What it does | Where it lives |
+|---|---|---|
+| Format | Describes components, screens, nodes and behaviour. | `SPEC.md`, `schema/`, `vocabulary/` |
+| Core library | Loads JSON/YAML, validates it and answers queries. | `packages/core/` |
+| CLI | Runs validation, queries and HTML export from a terminal. | `packages/cli/` |
+| Visualiser | Shows a document as an expandable graph. | `packages/visualiser/` |
+| MCP server | Gives a read-only AI tool connection over one document. | `packages/mcp-server/` |
 
-## Visualiser
+The parts share the same core library. This is important: a file accepted by
+the CLI is checked by the same rules used by the visualiser and MCP server.
 
-A document of a thousand nodes is not readable as text. `packages/visualiser`
-builds one self-contained page, `dist/visualiser.html`, that draws the
-document as a left-to-right node-link graph. Drag pans; Ctrl+wheel or the
-zoom buttons zoom. On desktop, the plain wheel pans the graph, while the
-navigation and inspector scroll independently. Its defining
-feature is level of detail: every card is a summary (id and type, plus the
-component it instantiates). Expanding a card reveals graph branches one level
-at a time; selecting it opens the readable inspector.
+## A tiny document
 
-- Components view (default): one card per structure (a screen) with the
-  component instances it contains nested by containment: a component sits
-  under the component whose node tree holds it, through the component's own
-  structure when it has one. Nodes that instantiate nothing are transparent.
-  Each authored instance stays separate, including its own children and
-  behaviour. Explicit instance children take precedence over a component
-  definition unless the node uses `$ref`. Components not reachable from
-  any screen sit under an Unreferenced group in All structures.
-- Structures view follows the full containment tree, including referenced
-  subtrees. Search matches names, IDs, labels, components and event handlers;
-  click a result to reveal its path. Scope and display filters apply to
-  search results.
-- The viewer opens the first surface at 100% zoom. Select a card to read its
-  purpose, behaviour, properties, states and source in the inspector.
-  Use its branch control or Space to expand; Enter selects. Source JSON
-  and optional detail branches remain available.
-- White surfaces, charcoal typography and restrained Tessallite green accents
-  define the navigation, graph and inspector, regardless of OS theme.
-  Fit, 100%, depth and zoom controls
-  adjust the graph without changing document content.
-- The desktop drawing area fills the remaining window height. Maximise view
-  hides the surrounding panels and application header; Restore view or Escape brings
-  them back without losing the selected node or expanded branches.
-- The compact graph header combines the title, controls, navigation hint,
-  visible-node count and live document status. No separate footer bars take
-  space from the canvas. Controls wrap on narrow screens.
-
-The header uses the official Tessallite primary horizontal logo on white.
-Brand assets and their licence are in
-`packages/visualiser/assets/`; the build embeds the logo directly into the
-page. Palette, control boundaries and Inter/JetBrains Mono font stacks follow
-the supplied Tessallite brand-identity kit and the white surfaces in the
-[website brand stylesheet](https://www.tessallite.io/css/brand.css). Fonts fall back to installed
-system fonts when those families are unavailable; no remote font is loaded.
-
-```sh
-npm run build                                   # writes packages/visualiser/dist/visualiser.html
-node packages/cli/dist/index.js view doc.openui.json --out doc.html   # page with the document embedded
-```
-
-Open `packages/visualiser/dist/visualiser.html` from disk and drop a JSON or
-YAML document on it, or open the page `tuis view` wrote. The page includes
-the schema validator, semantic checks and YAML parser. All runtime code is
-bundled, so it makes no network requests and needs no separately installed
-packages. Viewer labels and interaction defaults come from
-`packages/visualiser/src/viewer-config.json`, which is embedded at build time
-rather than fetched at runtime. The white theme does not change with system preference.
-Invalid files produce errors with paths; the previous valid document stays
-loaded. The CLI refuses invalid exports and source overwrite.
-
-See [the user guide](Docs/user-guide.md) for authoring, references,
-validation errors and the distinction between component definitions and
-instances. Run `npm run check` for the full build and test suite, including
-exported-page interactions in a DOM test environment. Actual Chrome visual
-verification is not complete: the enabled Browser extension is missing its
-native-host manifest and must be repaired through the plugin UI before that
-check can run. DOM tests do not certify browser layout or appearance. This
-blocker is tracked in [known issues](Docs/known_issues.md).
-
-## A document in brief
+Here is a complete small example. The screen contains one button. The button
+has a caption and an event describing what clicking it does.
 
 ```json
 {
-  "name": "My product", "version": "1.0.0", "description": "...", "tuis": "0.1",
-  "components": { "Button": { "description": "...", "props": { "variant": { "type": "string", "enum": ["primary", "secondary"] } } } },
+  "name": "Tiny app",
+  "version": "1",
+  "description": "A small example UI.",
+  "tuis": "0.1",
+  "components": {
+    "SaveButton": {
+      "description": "A button that saves the current work."
+    }
+  },
   "structures": {
-    "settings-bar": {
-      "description": "...",
-      "root": { "id": "bar", "type": "container", "children": [
-        { "id": "settings", "type": "icon-button", "label": "Settings", "component": "Button",
-          "events": [{ "event": "click", "handler": "onOpenSettings", "actions": ["open"], "target": "settings-menu", "effect": "Opens the settings menu." }],
-          "children": [
-            { "id": "settings-icon", "type": "icon", "icon": "icons/settings.svg", "label": "Settings" },
-            { "id": "settings-menu", "type": "menu", "presentation": "overlay", "children": [ ] }
-          ] }
-      ] }
+    "editor": {
+      "description": "The editor screen.",
+      "root": {
+        "id": "editor-screen",
+        "type": "container",
+        "children": [
+          {
+            "id": "save",
+            "type": "button",
+            "component": "SaveButton",
+            "label": "Save",
+            "events": [
+              {
+                "event": "click",
+                "handler": "handleSave",
+                "actions": ["submit"],
+                "effect": "Saves the current work."
+              }
+            ]
+          }
+        ]
+      }
     }
   }
 }
 ```
 
-See [examples/](examples/) for the full forms, [vocabulary/](vocabulary/)
-for node types, actions and states, and [mappings/](mappings/) for how the
-Custom Elements Manifest, W3C Design Tokens, Storybook manifests and
-react-docgen output map onto the format.
+The `id` is the node's name inside the document. The `type` tells us what it
+is. `component` links the button to a reusable definition. `label` is what a
+person sees or hears. The event has a real handler name, an action and a plain
+sentence about the result.
 
-## Repository
+## Read and query a document
 
-| Path | Contents |
+The CLI prints JSON, so its output can be used by another program.
+
+```sh
+# List screens and other surfaces
+node packages/cli/dist/index.js query examples/containment.json structures
+
+# Show the first two levels of one screen
+node packages/cli/dist/index.js query examples/containment.json tree dashboard --depth 2
+
+# Find buttons whose text contains “delete”
+node packages/cli/dist/index.js query examples/containment.json find --type button --text delete
+
+# Find the place where a handler is wired
+node packages/cli/dist/index.js query examples/containment.json find --event onConfirmDelete
+
+# Follow the parent chain to a node
+node packages/cli/dist/index.js query examples/containment.json path-to results-cell-value
+
+# List a node's events or direct children
+node packages/cli/dist/index.js query examples/containment.json events-of delete-button
+node packages/cli/dist/index.js query examples/containment.json children-of dashboard
+```
+
+The detailed query guide, including what a result means, is in
+[docs/project-guide.md](docs/project-guide.md).
+
+## Use the visualiser
+
+1. Run `npm run build`.
+2. Open `packages/visualiser/dist/visualiser.html`, or open an HTML page made
+   by `tuis view`.
+3. Choose **Open document** and select a `.json`, `.yaml` or `.yml` file.
+4. Choose **Components** to see reusable parts under their screens.
+5. Choose **Structures** to see every contained node in document order.
+6. Click a card to read its details. Click `+` to open a branch and `−` to
+   close it.
+
+The graph starts at a readable size. Drag or use the normal mouse wheel to pan.
+Hold Ctrl (Windows/Linux) or Command (macOS) while scrolling to zoom. **Fit**
+shows the whole graph, **100%** returns to normal scale, and **Maximise view**
+gives the graph all available space. Press Escape to restore the surrounding
+panels.
+
+The left panel can limit the surface, search by name/label/handler, hide
+logical groups or leaves, hide overlays and show detail branches. The right
+panel shows the selected node's purpose, static text, identity, events,
+properties, states, accessibility facts and source implementation when those
+facts exist.
+
+The viewer's icons are local monochrome SVG paths. It never downloads an icon
+from a document's `icon` URL. Dynamic bindings are shown as bindings, not
+pretended to be literal text.
+
+## Authoring rules in plain language
+
+The complete rules are in [SPEC.md](SPEC.md). The short version is:
+
+- Give every node a unique `id`.
+- Put one screen or surface under `structures`.
+- Put reusable parts under `components`.
+- Use `kind: "logical"` only for a group that is not itself seen or operated.
+- Give visible or interactive nodes a `type` and a `label` or `i18n` key.
+- Put children in the order a reader meets them.
+- Use one child with `repeat: true` for a list of many similar things.
+- Put a table's column definitions on `columns`, not in fake column nodes.
+- Put an overlay under the node that owns or opens it.
+- Use the handler name that exists in source code; do not invent one.
+- Describe the user's result in `effect`.
+- Store changing values as `data` bindings, not made-up sample values.
+- Record source locations in `implementation` when the document comes from
+  code.
+- Do not put CSS, colours, dimensions or screen coordinates in this format.
+
+After authoring, run `tuis validate file.json` and test the queries a reader
+will use. If validation fails, fix the cause rather than hiding the message.
+
+## MCP for read-only AI access
+
+Build first, then start one server for one document:
+
+```sh
+node packages/mcp-server/dist/index.js examples/containment.json
+```
+
+The server speaks MCP over standard input and output. It offers
+`list_structures`, `get_tree`, `get_node`, `find`, `path_to`, `events_of`,
+`children_of` and `validate`. It does not edit the document. A client can ask
+for a small tree first, then request only the node or event it needs.
+
+For example, a client can ask `find` for `event: "onConfirmDelete"`, use
+`path_to` to learn where the control lives, and use `events_of` to read its
+effect. This is easier and safer than sending the entire file every time.
+
+## Test and change the project
+
+Useful commands:
+
+```sh
+npm run build              # compile packages and build the offline viewer
+npm run validate:examples  # validate the two checked-in examples
+npm test                   # run Vitest
+npm run check              # run all normal checks
+```
+
+Tests check behaviour, not just the presence of functions. They cover loading,
+schema rules, semantic rules, queries, MCP tools, graph layout, card icons,
+static text, zoom, selection, search, expansion and exported-page behaviour.
+
+When changing the project:
+
+1. Read `AGENTS.md`, the active plan in `work/` and the latest session handout.
+2. Find the smallest owning package.
+3. Make the change with a focused test.
+4. Run the full check command.
+5. Check documentation, indexes and source/consumer field names.
+6. Record a real bug in `docs/known_issues.md` if one was found or fixed.
+
+Do not change a public field name casually. The schema, TypeScript types,
+validator, CLI, visualiser, MCP server and examples must agree.
+
+## Privacy and safety
+
+Documents can describe private applications. Keep private JSON, source dumps,
+credentials and customer data in the owning private repository. Do not paste
+tokens into examples or logs. The viewer is designed to work offline, and the
+MCP server is read-only, but a person who receives a document can still read
+its contents.
+
+The specification describes structure and behaviour; it is not proof that the
+real product works. A passing schema check means the document follows the
+format. A passing unit test means the tested code behaved as expected. A real
+browser check or deployed application check is a separate kind of evidence.
+
+## Repository map
+
+| Path | Purpose |
 |---|---|
-| `SPEC.md` | The normative specification (RFC 2119). |
-| `schema/` | JSON Schema 2020-12. |
-| `vocabulary/` | Node types with containment rules, event actions, states. |
-| `mappings/` | Field tables for CEM, design tokens, Storybook, react-docgen. |
-| `examples/` | Synthetic documents used by the tests. |
-| `packages/core` | Load, validate, query (TypeScript). |
-| `packages/cli` | `tuis validate`, `tuis query`, `tuis view`. |
-| `packages/mcp-server` | Read-only MCP server, stdio. |
-| `packages/visualiser` | Level-of-detail graph visualiser, one HTML file. |
-| `Docs/` | User guide and current known issues. |
-| `docs/` | Documentation index, upstream proposal and design questions. |
-| `AGENTS.md`, `llms.txt` | How an agent authors and consumes a document. |
+| `SPEC.md` | Normative field meanings and semantic rules. |
+| `schema/` | JSON Schema for field shapes and required values. |
+| `vocabulary/` | Allowed node types, actions and states. |
+| `mappings/` | How source manifests map to this format. |
+| `examples/` | Small synthetic documents used for learning and tests. |
+| `packages/core/` | Parser, document model, validator and queries. |
+| `packages/cli/` | Terminal commands and HTML export. |
+| `packages/mcp-server/` | Read-only MCP server. |
+| `packages/visualiser/` | Offline graph viewer and its tests. |
+| `docs/` | User guide, known issues, project guide, questions, screenshots and indexes. |
+| `work/` | Plans and session handouts for in-progress work. |
+| `AGENTS.md` | Source-authoring and source-consuming procedure. |
 
-## Relation to the other projects called OpenUI
+## Read next
 
-- [ctate/openui](https://github.com/ctate/openui) (openuispec.org): the
-  specification this extends. Same envelope, same props.
-- [Open UI](https://open-ui.org), a W3C community group standardising HTML
-  controls (selectmenu, popover). Unrelated; a browser platform effort.
-- [wandb/openui](https://github.com/wandb/openui): a tool that generates UI
-  from prompts with an LLM. Unrelated.
-- OpenUI5, SAP's UI framework. Unrelated.
-
-## Status
-
-v0.1 is being proven on a real task pane before an upstream pull request is
-proposed (see [docs/upstream-proposal.md](docs/upstream-proposal.md)). No
-licence file is present yet; see [docs/_INDEX.md](docs/_INDEX.md).
+- [Detailed project guide](docs/project-guide.md)
+- [Normative specification](SPEC.md)
+- [Authoring and consuming procedure](AGENTS.md)
+- [User guide](docs/user-guide.md)
+- [Node types](vocabulary/node-types.md)
+- [Actions](vocabulary/actions.md)
+- [States](vocabulary/states.md)
+- [Examples](examples/)
+- [Documentation index](docs/_INDEX.md)

@@ -1,5 +1,22 @@
 # User guide
 
+For a complete beginner-friendly explanation of the project, see the
+[project guide](project-guide.md). This page is the task-focused
+reference for opening, authoring and querying a document.
+
+## Source-derived application documents
+
+A route is not a complete screen specification. Include its shell, nested
+controls, conditional panels, overlays and repeated content. Expand JSX held
+in variables or render callbacks at its use site. Record non-rendering guards
+when they affect navigation or visible confirmations.
+
+Before handing over a document, validate it and check a deep `path-to`, a
+handler `find --event` and an interactive node's `events-of`. Compare route,
+panel, source-file and event-site coverage with the source inventory. Include
+a short provenance note distinguishing active surfaces from unreferenced
+source definitions. Static source coverage is not runtime verification.
+
 ## Open and explore a document
 
 From the repository root:
@@ -24,6 +41,21 @@ The left panel selects Components or Structures, limits the surface, searches
 the document and controls display options. The centre shows containment.
 The inspector describes the selected node. On load, the first authored surface
 is selected and the graph opens at 100% zoom.
+
+Cards use monochrome line icons to identify the represented element: text,
+heading, button, clickable icon, window, dialog, logical group and the other
+node types. An additional event symbol marks a card with events. Event sections
+and event items also have their own symbol. These icons are embedded; the viewer
+does not load a document's external icon URLs.
+
+Literal captions and inline static text appear below the card identity. Text
+previews occupy at most two lines; cards without text stay compact. Select a
+card for its full **Static text** section, or hover for the full summary. Icon
+and image names appear as **Accessible name**, not as visible text inside those
+elements. Authored translations with a literal label are shown; unresolved
+translation keys, dynamic bindings and component prop declarations are not
+treated as literal text. Conditional/repeated descendants and separate nested
+controls retain their own cards instead of being merged into an owner's text.
 
 The viewer uses Tessallite's official primary logo, white surfaces and accessible
 control borders. The logo is embedded. Inter and JetBrains Mono use system fallbacks when not installed;

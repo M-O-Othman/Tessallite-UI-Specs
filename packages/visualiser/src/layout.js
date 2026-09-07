@@ -23,15 +23,27 @@ export function layoutForest(nodes, edges, card = CARD) {
   const place = (id, depth) => {
     const kids = children.get(id);
     const x = depth * (card.width + card.gapX);
+    const height = byId.get(id).height ?? card.height;
+    const start = cursor;
     if (kids.length === 0) {
-      positions.set(id, { x, y: cursor, width: card.width, height: card.height });
-      cursor += card.height + card.gapY;
-      return;
+      const position = { x, y: cursor, width: card.width, height };
+      positions.set(id, position);
+      cursor += height + card.gapY;
+      return [position];
     }
-    for (const kid of kids) place(kid, depth + 1);
+    const descendants = kids.flatMap((kid) => place(kid, depth + 1));
     const first = positions.get(kids[0]);
     const last = positions.get(kids[kids.length - 1]);
-    positions.set(id, { x, y: (first.y + last.y) / 2, width: card.width, height: card.height });
+    let y = (first.y + first.height / 2 + last.y + last.height / 2) / 2 - height / 2;
+    if (y < start) {
+      const shift = start - y;
+      for (const position of descendants) position.y += shift;
+      cursor += shift; y = start;
+    }
+    const position = { x, y, width: card.width, height };
+    positions.set(id, position);
+    cursor = Math.max(cursor, y + height + card.gapY);
+    return [...descendants, position];
   };
   for (const n of nodes) {
     if (hasParent.has(n.id)) continue;

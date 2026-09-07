@@ -1,5 +1,6 @@
 import { componentOf, effectiveNode, pathOf } from './model.js';
 import viewerConfig from './viewer-config.json' with { type: 'json' };
+import { cardText } from './card-content.js';
 
 const captions = viewerConfig.captions.inspector;
 const element = (tag, text, className) => Object.assign(document.createElement(tag), { textContent: text ?? '', className: className ?? '' });
@@ -35,6 +36,12 @@ export function renderInspector(vnode, model, onSelect, onTarget) {
   const definition = vnode.card?.definition || model.cards.get(componentOf(node))?.definition;
   const description = node.description || definition?.description;
   if (description) section(captions.sectionTitles.purpose).append(element('p', description));
+  const literal = cardText(vnode, model);
+  if (literal.text.length) {
+    const parent = section(viewerConfig.captions.card.staticText);
+    for (const text of literal.text) parent.append(element('p', text, 'static-text'));
+  }
+  if (literal.accessibleName) section(viewerConfig.captions.card.accessibleName).append(element('p', literal.accessibleName));
   fields(captions.sectionTitles.identity, { id: node.id, type: node.type, component: vnode.card?.id || node.component, label: node.label, i18n: node.i18n, condition: node.condition, repeat: node.repeat, presentation: node.presentation });
   const events = node.events || definition?.events || definition?.['x-events'];
   if (events?.length) {

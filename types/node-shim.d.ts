@@ -2,7 +2,7 @@
  * Minimal ambient declarations for the Node.js surface this repository uses.
  * @types/node is not an approved dependency for v0.1; this file declares only
  * what the packages call. Replace with @types/node once approved (see
- * docs/questions_ui-spec-open-questions.md, follow-up questions).
+ * docs/questions/ui-spec-open-questions.md, follow-up questions).
  */
 
 declare module 'node:fs' {

@@ -110,6 +110,13 @@ body.dragging { outline: 3px dashed var(--accent); outline-offset: -6px; }
 .card .line-0 { font-weight: 600; }
 .card .line-1, .card .line-2 { fill: var(--muted); font-size: 11px; }
 .card .badge { fill: var(--muted); font-size: 10px; }
+.card .semantic-icon { color: var(--ink); }
+.card .semantic-icon path { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.card .event-icon { color: var(--muted); }
+.card.structure .semantic-icon { color: #FFFFFF; }
+.card .preview-line { fill: var(--ink); font-size: 11px; }
+.card.structure .preview-line, .card.structure .badge { fill: #FFFFFF; }
+.static-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .card .toggle rect { fill: var(--panel); stroke: var(--card-line); }
 .card .toggle text { fill: var(--accent); font-size: 15px; font-weight: 500; }
 body.view-maximised .app-header,

@@ -6,7 +6,25 @@
       "gapX": 64,
       "gapY": 18
     },
+    "content": {
+      "previewHeight": 108,
+      "previewLines": 2,
+      "previewCharacters": 33,
+      "wrapperTypes": ["container", "group"],
+      "inlineTypes": ["container", "group", "text", "heading"],
+      "textTypes": ["text", "heading"],
+      "accessibleNameTypes": ["icon", "icon-button", "image", "chart"],
+      "literalProps": ["text", "children", "label", "caption"]
+    },
     "drawing": {
+      "iconSize": 18,
+      "iconTop": 11,
+      "iconGap": 8,
+      "eventInsetX": 54,
+      "eventOnlyInsetX": 32,
+      "previewTop": 49,
+      "previewLineSpacing": 16,
+      "previewBaseline": 13,
       "cornerRadius": 10,
       "textInsetX": 14,
       "textFirstBaseline": 24,
@@ -48,6 +66,12 @@
     "searchMaxDepth": 40
   },
   "captions": {
+    "card": {
+      "staticText": "Static text",
+      "accessibleName": "Accessible name",
+      "events": "events",
+      "textSeparator": " · "
+    },
     "errors": {
       "documentNotLoaded": "Document not loaded. Correct the reported errors and open it again.",
       "cannotOpen": "Cannot open ",

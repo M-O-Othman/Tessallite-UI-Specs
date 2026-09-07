@@ -108,11 +108,11 @@ function itemsOf(sectionVid, key, value) {
   if (Array.isArray(value)) {
     return value.map((v, i) => {
       const name = typeof v === 'string' ? v : v.name || v.id || v.event || String(i);
-      return { vid: vid.item(sectionVid, String(i)), kind: 'item', lines: [String(name), summarise(typeof v === 'string' ? '' : v)], data: v };
+      return { vid: vid.item(sectionVid, String(i)), kind: 'item', section: key, lines: [String(name), summarise(typeof v === 'string' ? '' : v)], data: v };
     });
   }
   if (value && typeof value === 'object') {
-    return Object.entries(value).map(([k, v]) => ({ vid: vid.item(sectionVid, k), kind: 'item', lines: [k, summarise(v)], data: v }));
+    return Object.entries(value).map(([k, v]) => ({ vid: vid.item(sectionVid, k), kind: 'item', section: key, lines: [k, summarise(v)], data: v }));
   }
   return [];
 }
@@ -128,7 +128,7 @@ function sectionsOf(parentVid, obj, keys, facts) {
     if (value === undefined) continue;
     const svid = vid.section(parentVid, key);
     const items = itemsOf(svid, key, value);
-    out.push({ vid: svid, kind: 'section', lines: [key, `${items.length} ${items.length === 1 ? 'entry' : 'entries'}`], data: value, items });
+    out.push({ vid: svid, kind: 'section', section: key, lines: [key, `${items.length} ${items.length === 1 ? 'entry' : 'entries'}`], data: value, items });
   }
   return out;
 }

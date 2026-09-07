@@ -1,6 +1,7 @@
 /** SVG drawing, pan and zoom. Depends on layout.js. */
 import { bounds, edgePath, fitTransform } from './layout.js';
 import viewerConfig from './viewer-config.json' with { type: 'json' };
+import { getCardIcon } from './card-icons.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const drawing = viewerConfig.card.drawing;
@@ -17,6 +18,28 @@ function el(tag, attrs = {}, text) {
 function clip(text, max) {
   const s = String(text ?? '');
   return s.length > max ? s.slice(0, max - 1) + '…' : s;
+}
+
+function previewLines(text) {
+  const max = viewerConfig.card.content.previewCharacters;
+  const lines = [];
+  let remaining = String(text).replace(/\s+/g, ' ').trim();
+  while (remaining && lines.length < viewerConfig.card.content.previewLines) {
+    if (lines.length === viewerConfig.card.content.previewLines - 1) { lines.push(clip(remaining, max)); break; }
+    if (remaining.length <= max) { lines.push(remaining); break; }
+    const space = remaining.lastIndexOf(' ', max);
+    const end = space > 0 ? space : max;
+    lines.push(remaining.slice(0, end)); remaining = remaining.slice(end).trim();
+  }
+  return lines;
+}
+
+function drawIcon(icon, x, className) {
+  const svg = el('svg', { x, y: drawing.iconTop, width: drawing.iconSize, height: drawing.iconSize,
+    viewBox: icon.viewBox, class: `semantic-icon ${className}`, 'data-icon': icon.key,
+    'aria-hidden': 'true', focusable: 'false' });
+  for (const d of icon.paths) svg.appendChild(el('path', { d }));
+  return svg;
 }
 
 /**
@@ -129,20 +152,34 @@ export function createGraph(svg, callbacks) {
 
   function drawCard(card, p) {
     const g = el('g', { class: `card ${card.classes || ''}`.trim(), transform: `translate(${p.x},${p.y})`, tabindex: 0, role: 'button', 'data-id': card.id, 'aria-label': card.ariaLabel || card.id, 'aria-expanded': card.expanded });
-    g.appendChild(el('title', {}, card.lines.join('\n')));
+    g.appendChild(el('title', {}, card.title || card.lines.join('\n')));
     g.appendChild(el('rect', { width: p.width, height: p.height, rx: drawing.cornerRadius }));
+    if (card.icon) g.appendChild(drawIcon(card.icon, drawing.textInsetX, 'type-icon'));
+    const eventX = p.width - (card.toggle ? drawing.eventInsetX : drawing.eventOnlyInsetX);
+    if (card.eventCount) {
+      const icon = drawIcon(getCardIcon({ category: 'event' }), eventX, 'event-icon');
+      icon.appendChild(el('title', {}, `${card.eventCount} ${viewerConfig.captions.card.events}`));
+      g.appendChild(icon);
+    }
     card.lines.forEach((line, i) => {
       const besideToggle = i === 0 && card.toggle;
-      const right = besideToggle ? p.width - drawing.toggleInsetX - drawing.textToggleGap : p.width - drawing.textRightInset;
+      const right = i === 0 && card.eventCount ? eventX - drawing.iconGap : besideToggle ? p.width - drawing.toggleInsetX - drawing.textToggleGap : p.width - drawing.textRightInset;
+      const left = drawing.textInsetX + (i === 0 && card.icon ? drawing.iconSize + drawing.iconGap : 0);
       const lineViewport = el('svg', {
-        x: drawing.textInsetX,
+        x: left,
         y: drawing.textViewportTop + i * drawing.textLineSpacing,
-        width: Math.max(0, right - drawing.textInsetX),
+        width: Math.max(0, right - left),
         height: drawing.textViewportHeight,
         overflow: 'hidden',
       });
       lineViewport.appendChild(el('text', { x: 0, y: drawing.textFirstBaseline - drawing.textViewportTop, class: `line line-${i}` }, clip(line, besideToggle ? drawing.textWithToggleMaxCharacters : drawing.textMaxCharacters)));
       g.appendChild(lineViewport);
+    });
+    if (card.preview) previewLines(card.preview).forEach((line, i) => {
+      const text = el('svg', { x: drawing.textInsetX, y: drawing.previewTop + i * drawing.previewLineSpacing,
+        width: Math.max(0, p.width - drawing.textInsetX - drawing.textRightInset), height: drawing.previewLineSpacing, overflow: 'hidden', class: 'static-preview' });
+      text.appendChild(el('text', { x: 0, y: drawing.previewBaseline, class: 'preview-line' }, line));
+      g.appendChild(text);
     });
     if (card.badge) g.appendChild(el('text', { x: p.width - drawing.badgeInsetX, y: p.height - drawing.badgeInsetY, class: 'badge', 'text-anchor': 'end' }, clip(card.badge, drawing.badgeMaxCharacters)));
     if (card.toggle) {
