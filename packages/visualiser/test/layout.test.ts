@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bounds, CARD, edgePath, fitTransform, layoutForest, layoutGroups, overlaps } from '../src/layout.js';
+import { bounds, CARD, edgePath, fitTransform, layoutForest, overlaps } from '../src/layout.js';
 
 const nodes = ['r', 'a', 'b', 'c', 'd', 'e'].map((id) => ({ id }));
 const edges = [{ from: 'r', to: 'a' }, { from: 'r', to: 'b' }, { from: 'a', to: 'c' }, { from: 'a', to: 'd' }, { from: 'b', to: 'e' }];
@@ -25,13 +25,6 @@ describe('layout', () => {
   it('stacks separate roots of a forest', () => {
     const p = layoutForest([{ id: 'x' }, { id: 'y' }], []);
     expect(p.get('y')!.y).toBeGreaterThan(p.get('x')!.y + CARD.height);
-  });
-
-  it('lays groups out as columns with headers', () => {
-    const { positions, headers } = layoutGroups([{ name: 'A', items: [{ id: 'a1' }, { id: 'a2' }] }, { name: 'B', items: [{ id: 'b1' }] }]);
-    expect(headers.map((h) => h.name)).toEqual(['A', 'B']);
-    expect(positions.get('b1')!.x).toBe(CARD.width + CARD.groupGap);
-    expect(overlaps(positions.get('a1')!, positions.get('a2')!)).toBe(false);
   });
 
   it('bounds, fit and edge path', () => {

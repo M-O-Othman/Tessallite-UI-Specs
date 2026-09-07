@@ -1,6 +1,6 @@
 /** Pure layout functions: coordinates only, no DOM. */
 
-export const CARD = Object.freeze({ width: 220, height: 66, gapX: 90, gapY: 14, groupGap: 40 });
+export const CARD = Object.freeze({ width: 220, height: 66, gapX: 90, gapY: 14 });
 
 /**
  * Layered left-to-right tree layout. Depth decides x; leaves are stacked
@@ -38,26 +38,6 @@ export function layoutForest(nodes, edges, card = CARD) {
     cursor += card.gapY;
   }
   return positions;
-}
-
-/**
- * Grouped columns for the Components view: one column per group, cards
- * stacked, a header row per column. Returns positions plus column headers.
- */
-export function layoutGroups(groups, card = CARD) {
-  const positions = new Map();
-  const headers = [];
-  let x = 0;
-  for (const group of groups) {
-    headers.push({ name: group.name, x, y: 0, width: card.width, count: group.items.length });
-    let y = card.height * 0.6;
-    for (const item of group.items) {
-      positions.set(item.id, { x, y, width: card.width, height: card.height });
-      y += card.height + card.gapY;
-    }
-    x += card.width + card.groupGap;
-  }
-  return { positions, headers };
 }
 
 /** Bounding box of a set of positions, or null when empty. */
