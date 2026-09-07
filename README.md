@@ -80,7 +80,8 @@ Tools: `list_structures`, `get_tree`, `get_node`, `find`, `path_to`,
 
 A document of a thousand nodes is not readable as text. `packages/visualiser`
 builds one self-contained page, `dist/visualiser.html`, that draws the
-document as a left-to-right node-link graph with pan and zoom. Its defining
+document as a left-to-right node-link graph. Drag pans; Ctrl+wheel or the
+zoom buttons zoom; the plain wheel scrolls the page. Its defining
 feature is level of detail: every card is a summary (id and type, plus the
 component it instantiates) and detail appears only when you click a card's
 toggle, one level at a time.

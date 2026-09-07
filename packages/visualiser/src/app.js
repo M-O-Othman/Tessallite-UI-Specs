@@ -135,6 +135,8 @@ function wire() {
   $('#depth-apply').addEventListener('click', () => { if (state.model) { state.expanded = expandedToDepth(state.model, state.view, Number($('#depth').value) || 1, state.filters); redraw(true); } });
   $('#collapse-all').addEventListener('click', () => { if (state.model) { state.expanded = expandedToDepth(state.model, state.view, 1, state.filters); redraw(true); } });
   $('#fit').addEventListener('click', () => graph.fit());
+  $('#zoom-in').addEventListener('click', () => graph.zoomBy(1.25));
+  $('#zoom-out').addEventListener('click', () => graph.zoomBy(0.8));
   $('#search').addEventListener('input', () => { if (state.model) runSearch(); });
   $('#search').addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.target.value = ''; runSearch(); } });
   const embedded = document.getElementById('tuis-document');

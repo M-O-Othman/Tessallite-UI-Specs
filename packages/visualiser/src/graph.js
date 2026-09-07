@@ -40,18 +40,24 @@ export function createGraph(svg, callbacks) {
   const endDrag = () => { state.drag = null; };
   svg.addEventListener('pointerup', endDrag);
   svg.addEventListener('pointercancel', endDrag);
-  svg.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const rect = svg.getBoundingClientRect();
-    const px = e.clientX - rect.left;
-    const py = e.clientY - rect.top;
-    const factor = Math.exp(-e.deltaY * 0.0015);
+  function zoomAt(px, py, factor) {
     const k = Math.min(4, Math.max(0.05, state.k * factor));
     state.tx = px - ((px - state.tx) * k) / state.k;
     state.ty = py - ((py - state.ty) * k) / state.k;
     state.k = k;
     apply();
+  }
+  // Plain wheel scrolls the page; Ctrl (or pinch) zooms the graph at the pointer.
+  svg.addEventListener('wheel', (e) => {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    const rect = svg.getBoundingClientRect();
+    zoomAt(e.clientX - rect.left, e.clientY - rect.top, Math.exp(-e.deltaY * 0.0015));
   }, { passive: false });
+  function zoomBy(factor) {
+    const rect = svg.getBoundingClientRect();
+    zoomAt(rect.width / 2, rect.height / 2, factor);
+  }
 
   function fit() {
     const rect = svg.getBoundingClientRect();
@@ -123,5 +129,5 @@ export function createGraph(svg, callbacks) {
     if (g) g.focus();
   }
 
-  return { render, fit, centerOn, focusCard };
+  return { render, fit, centerOn, focusCard, zoomBy };
 }

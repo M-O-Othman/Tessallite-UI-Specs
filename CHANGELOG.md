@@ -2,6 +2,9 @@
 
 ## 0.2.0 (unreleased)
 
+- Visualiser: the page scrolls normally; zoom is Ctrl+wheel or the zoom buttons,
+  so the wheel no longer traps page scrolling over the canvas.
+
 - packages/visualiser: a self-contained HTML visualiser (vanilla JavaScript
   and SVG, no dependencies) that draws a document as a pannable, zoomable
   left-to-right graph at uniform level of detail. Components view opens at

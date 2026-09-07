@@ -29,10 +29,12 @@
   <label class="depth">Depth <input id="depth" type="number" min="1" max="40" value="1"> <button id="depth-apply" type="button">Expand to depth</button></label>
   <button id="collapse-all" type="button">Collapse all</button>
   <button id="fit" type="button">Fit to view</button>
+  <button id="zoom-in" type="button" aria-label="Zoom in">Zoom +</button>
+  <button id="zoom-out" type="button" aria-label="Zoom out">Zoom -</button>
   <label class="search">Search <input id="search" type="search" placeholder="id, name, label, component"> <span id="hits" class="hits"></span></label>
 </header>
 <main class="workspace">
-  <svg id="canvas" class="canvas" role="application" aria-label="Graph canvas: drag to pan, wheel to zoom"></svg>
+  <svg id="canvas" class="canvas" role="application" aria-label="Graph canvas: drag to pan, Ctrl+wheel or the zoom buttons to zoom"></svg>
   <aside class="side">
     <section class="panel">
       <h2>Selected node</h2>
