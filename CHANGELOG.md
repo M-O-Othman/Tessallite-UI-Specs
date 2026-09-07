@@ -1,5 +1,20 @@
 # Change log
 
+## 0.2.0 (unreleased)
+
+- packages/visualiser: a self-contained HTML visualiser (vanilla JavaScript
+  and SVG, no dependencies) that draws a document as a pannable, zoomable
+  left-to-right graph at uniform level of detail. Components view opens at
+  group and component cards; Structures view opens with every root collapsed
+  to depth 1; detail (props, events, states, slots, structure, facts) appears
+  only when a card is expanded, one level at a time. Filters, search that
+  expands the path to hits, a detail panel with clickable breadcrumb, counts
+  by type and fit to view.
+- `tuis view <file> [--out page.html]`: writes the visualiser page with the
+  document embedded.
+- The specification, schema and vocabularies are unchanged; a 0.1 document
+  is a 0.2 document.
+
 ## 0.1.0 (unreleased)
 
 Initial version.

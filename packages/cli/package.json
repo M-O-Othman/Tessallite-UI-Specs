@@ -1,9 +1,15 @@
 {
   "name": "@tessallite-ui-specs/cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "tuis: validate and query Tessallite-UI-Specs documents from the command line.",
   "type": "module",
-  "bin": { "tuis": "./dist/index.js" },
-  "files": ["dist"],
-  "dependencies": { "@tessallite-ui-specs/core": "0.1.0" }
+  "bin": {
+    "tuis": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@tessallite-ui-specs/core": "0.2.0"
+  }
 }

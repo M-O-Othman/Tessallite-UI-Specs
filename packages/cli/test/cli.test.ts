@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { formatIssue, main, parseArgs, runQuery } from '../src/cli.js';
+import { readFileSync } from 'node:fs';
+import { formatIssue, main, parseArgs, runQuery, viewHtml } from '../src/cli.js';
 
 const ROOT = decodeURIComponent(new URL('../../../', import.meta.url).pathname);
 const MINIMAL = `${ROOT}examples/minimal.json`;
@@ -27,6 +28,23 @@ describe('tuis CLI', () => {
     expect(errors[0]).toMatch(/error\(s\)$/);
     expect(errors.join('\n')).toMatch(/R8 .*col-missing/);
     expect(errors.join('\n')).toMatch(/R17 .*nowhere/);
+  });
+
+  it('view embeds the document into a single self-contained page', () => {
+    const template = '<html><script id="tuis-document" type="application/json"><!--DOCUMENT--></script></html>';
+    const html = viewHtml({ name: 'x', note: '</script><b>' }, template);
+    expect(html).toContain('"name":"x"');
+    expect(html).not.toContain('</script><b>');
+    expect(html).toContain('<\\/script>');
+    expect(() => viewHtml({}, '<html></html>')).toThrow(/document slot/);
+    const built = readFileSync(`${ROOT}packages/visualiser/dist/visualiser.html`, 'utf8');
+    const page = viewHtml(JSON.parse(readFileSync(MINIMAL, 'utf8')), built);
+    expect(page).not.toContain('<!--DOCUMENT-->');
+    expect(page).not.toMatch(/<script src=|<link /);
+    expect(page).toContain('Minimal example');
+    const out = `${ROOT}packages/cli/test/fixtures/minimal.view.html`;
+    expect(main(['view', MINIMAL, '--out', out])).toBe(0);
+    expect(readFileSync(out, 'utf8')).toContain('"tuis":"0.1"');
   });
 
   it('formats an issue with rule, path and id', () => {

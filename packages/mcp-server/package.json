@@ -1,6 +1,6 @@
 {
   "name": "@tessallite-ui-specs/mcp-server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Read-only MCP server over one Tessallite-UI-Specs document (stdio).",
   "type": "module",
   "bin": {
@@ -11,7 +11,7 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "@tessallite-ui-specs/core": "0.1.0",
+    "@tessallite-ui-specs/core": "0.2.0",
     "zod": "^4.5.4"
   }
 }

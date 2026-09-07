@@ -1,0 +1,9 @@
+{
+  "name": "@tessallite-ui-specs/visualiser",
+  "version": "0.2.0",
+  "description": "Level-of-detail visualiser for Tessallite-UI-Specs documents: one self-contained HTML file.",
+  "type": "module",
+  "private": true,
+  "scripts": { "build": "node build.mjs" },
+  "files": ["dist"]
+}

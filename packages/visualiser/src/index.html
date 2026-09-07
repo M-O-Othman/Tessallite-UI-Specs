@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tessallite-UI-Specs visualiser</title>
+<style>
+/*STYLE*/
+</style>
+</head>
+<body>
+<header class="toolbar">
+  <div class="brand">Tessallite-UI-Specs visualiser</div>
+  <label class="file">Open <input id="file" type="file" accept=".json,application/json"></label>
+  <fieldset class="views">
+    <legend>View</legend>
+    <label><input type="radio" name="view" value="components" checked> Components</label>
+    <label><input type="radio" name="view" value="structures"> Structures</label>
+  </fieldset>
+  <label class="select">Structure <select id="structure" aria-label="Structure"></select></label>
+  <fieldset class="filters">
+    <legend>Filters</legend>
+    <label><input type="checkbox" data-filter="hideLogical"> Hide logical</label>
+    <label><input type="checkbox" data-filter="hideLeaves"> Hide leaf types</label>
+    <label><input type="checkbox" data-filter="onlyComponent"> Only with component</label>
+    <label><input type="checkbox" data-filter="hideOverlays"> Hide overlays</label>
+    <label><input type="checkbox" data-filter="collapseRepeat"> Collapse repeat templates</label>
+  </fieldset>
+  <label class="depth">Depth <input id="depth" type="number" min="1" max="40" value="1"> <button id="depth-apply" type="button">Expand to depth</button></label>
+  <button id="collapse-all" type="button">Collapse all</button>
+  <button id="fit" type="button">Fit to view</button>
+  <label class="search">Search <input id="search" type="search" placeholder="id, name, label, component"> <span id="hits" class="hits"></span></label>
+</header>
+<main class="workspace">
+  <svg id="canvas" class="canvas" role="application" aria-label="Graph canvas: drag to pan, wheel to zoom"></svg>
+  <aside class="side">
+    <section class="panel">
+      <h2>Selected node</h2>
+      <nav id="breadcrumb" class="breadcrumb" aria-label="Path"></nav>
+      <pre id="json" class="json">Select a card.</pre>
+    </section>
+    <section class="panel">
+      <h2 id="counts-title">Counts</h2>
+      <ul id="counts" class="counts"></ul>
+    </section>
+  </aside>
+</main>
+<footer id="status" class="status" aria-live="polite"></footer>
+<script id="tuis-document" type="application/json"><!--DOCUMENT--></script>
+<script>
+/*SCRIPT*/
+</script>
+</body>
+</html>

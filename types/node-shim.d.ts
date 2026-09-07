@@ -7,6 +7,7 @@
 
 declare module 'node:fs' {
   export function readFileSync(path: string | URL, encoding: 'utf8'): string;
+  export function writeFileSync(path: string | URL, data: string): void;
 }
 
 declare module 'node:path' {

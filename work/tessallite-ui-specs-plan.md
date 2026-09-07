@@ -95,19 +95,34 @@ Phase 5 - Visualiser (v0.2, approved 2026-09-07)
       layered tree layout + pan/zoom), src/style.css; build.mjs inlines
       them into dist/visualiser.html, one self-contained file that opens
       from disk and takes a document by drag-drop or file picker.
-  5.2 Views. "Components": one card per component definition, grouped by
-      group/package, edges = used-by (component field and $ref from
-      structures and other component structures); no structure nodes.
-      "Structures": containment tree per structure, every root collapsed
-      to depth 1 on load; click to expand/collapse a node; "expand to
-      depth N"; filters: hide logical nodes, hide leaf types (text, icon,
-      divider, skeleton), only nodes with a component, hide overlays,
-      collapse repeat templates. Search on id/name/label/component expands
-      the path to each hit and highlights it.
-  5.3 Node card: id, type, kind, component, condition, repeat, overlay
-      markers. Detail panel on select: the node's full JSON plus its
-      path (breadcrumb, clickable). Counts panel: nodes by type for the
-      visible selection. Fit-to-view button.
+  5.2 Views (refined 2026-09-07). Level of detail is uniform: every card
+      is a summary and detail appears only when the user clicks to expand,
+      one level at a time; clicking again collapses.
+      "Components": opens at the visible-component level with categorical
+      grouping: group nodes (each component's `group`, falling back to
+      `package`, then "Ungrouped") with the component definitions under
+      them, nothing below drawn on load. Expanding a component reveals its
+      detail sections as child nodes (props, events, states, slots,
+      structure); expanding a section reveals its entries; expanding
+      `structure` reveals the component's structure root and from there the
+      containment tree. Used-by edges (component field and $ref from other
+      component structures) are drawn between component cards; uses from
+      structures are listed in the detail panel. No structure nodes at the
+      top level.
+      "Structures": containment tree per structure, every root collapsed to
+      depth 1 on load; click to expand/collapse; "expand to depth N";
+      filters: hide logical nodes, hide leaf types (text, icon, divider,
+      skeleton), only nodes with a component, hide overlays, collapse
+      repeat templates. Expanding a node reveals its detail sections
+      (facts, props, events, states, slots, columns, a11y, data,
+      implementation) beside its contained children. Search on
+      id/name/label/component expands the path to each hit and highlights
+      it.
+  5.3 Node card: id and type, plus the component name when the node
+      instantiates one; nothing else on the canvas until expanded. Detail
+      panel on select: the node's full JSON plus its path (breadcrumb,
+      clickable). Counts panel: nodes by type for the visible selection.
+      Fit-to-view button.
   5.4 CLI: `tuis view <file> [--out file.html]` writes dist/visualiser.html
       with the document embedded, so `tuis view doc.json` gives a file that
       opens without a picker.

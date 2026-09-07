@@ -11,6 +11,7 @@
 | [../mappings/design-tokens.md](../mappings/design-tokens.md) | W3C Design Tokens mapping. |
 | [../mappings/storybook-manifest.md](../mappings/storybook-manifest.md) | Storybook manifest mapping. |
 | [../mappings/react-docgen.md](../mappings/react-docgen.md) | react-docgen mapping. |
+| [../packages/visualiser/src/](../packages/visualiser/src/) | Visualiser sources; `npm run build` writes `dist/visualiser.html`. |
 | [../AGENTS.md](../AGENTS.md) | Agent authoring and consumption guide. |
 | [../llms.txt](../llms.txt) | Entry point for language models. |
 | [upstream-proposal.md](upstream-proposal.md) | Draft pull request text for ctate/openui. |

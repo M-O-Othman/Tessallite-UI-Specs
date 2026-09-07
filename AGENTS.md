@@ -54,6 +54,10 @@ tuis query doc.openui.json path-to kpi-card-value
 tuis query doc.openui.json events-of mode-tabs
 ```
 
+For a human reader, `tuis view doc.openui.json --out doc.html` writes a
+page that draws the document as a collapsible graph; hand that file over
+rather than the JSON.
+
 MCP (stdio, one document per server): register
 `node packages/mcp-server/dist/index.js <file>` and call `list_structures`,
 `get_tree` (with `depth` to keep responses small), `get_node`, `find`,

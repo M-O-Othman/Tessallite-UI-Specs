@@ -27,7 +27,8 @@ Read in this order to author or consume a document:
 
 ## Tooling
 
-- CLI: `tuis validate <file>`; `tuis query <file> structures|tree|node|find|path-to|events-of|children-of`.
+- CLI: `tuis validate <file>`; `tuis query <file> structures|tree|node|find|path-to|events-of|children-of`; `tuis view <file> [--out page.html]` writes a self-contained visualiser page.
+- Visualiser (packages/visualiser/dist/visualiser.html): level-of-detail graph for humans; opens at group and component level, expands one level per click.
 - MCP server (stdio, read-only): list_structures, get_tree, get_node, find, path_to, events_of, children_of, validate.
 
 ## Optional

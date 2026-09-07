@@ -76,6 +76,40 @@ claude mcp add tuis -- node /path/to/packages/mcp-server/dist/index.js /path/to/
 Tools: `list_structures`, `get_tree`, `get_node`, `find`, `path_to`,
 `events_of`, `children_of`, `validate`. All read-only.
 
+## Visualiser
+
+A document of a thousand nodes is not readable as text. `packages/visualiser`
+builds one self-contained page, `dist/visualiser.html`, that draws the
+document as a left-to-right node-link graph with pan and zoom. Its defining
+feature is level of detail: every card is a summary (id and type, plus the
+component it instantiates) and detail appears only when you click a card's
+toggle, one level at a time.
+
+- Components view (default): group cards (the component's `group`, then
+  `package`, then Ungrouped) with the component definitions under them.
+  Expanding a component reveals its props, events, states, slots and
+  structure as sections; expanding a section reveals its entries; the
+  structure section leads into the containment tree. Dashed edges show
+  which component structures use which components.
+- Structures view: one containment tree per structure, collapsed to depth 1
+  on load. Filters: hide logical nodes, hide leaf types, only nodes with a
+  component, hide overlays, collapse repeat templates. Expanding a node
+  reveals its facts, props, events, states and other sections beside its
+  children.
+- Search on id, name, label, i18n key and component expands the path to
+  every hit and highlights it. The detail panel shows the selected node's
+  JSON with a clickable breadcrumb; the counts panel lists drawn nodes by
+  type; Fit to view resets the camera.
+
+```sh
+npm run build                                   # writes packages/visualiser/dist/visualiser.html
+node packages/cli/dist/index.js view doc.openui.json --out doc.html   # page with the document embedded
+```
+
+Open `dist/visualiser.html` from disk and drop a `.json` document on it, or
+open the page `tuis view` wrote. No dependencies, no network: vanilla
+JavaScript and SVG, light and dark by system preference.
+
 ## A document in brief
 
 ```json
@@ -113,8 +147,9 @@ react-docgen output map onto the format.
 | `mappings/` | Field tables for CEM, design tokens, Storybook, react-docgen. |
 | `examples/` | Synthetic documents used by the tests. |
 | `packages/core` | Load, validate, query (TypeScript). |
-| `packages/cli` | `tuis validate`, `tuis query`. |
+| `packages/cli` | `tuis validate`, `tuis query`, `tuis view`. |
 | `packages/mcp-server` | Read-only MCP server, stdio. |
+| `packages/visualiser` | Level-of-detail graph visualiser, one HTML file. |
 | `docs/` | Index, upstream proposal, open questions. |
 | `AGENTS.md`, `llms.txt` | How an agent authors and consumes a document. |
 

@@ -1,3 +1,4 @@
+import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   childrenOf, eventsOf, find, loadDocumentFile, node, openDocument, pathTo, structures, tree, validateDocument,
@@ -13,8 +14,10 @@ const USAGE = `Usage:
   tuis query <file> path-to <id>
   tuis query <file> events-of <id>
   tuis query <file> children-of <id>
+  tuis view <file> [--out page.html]
 
-<file> is a .json, .yaml or .yml document. Query output is JSON on stdout.`;
+<file> is a .json, .yaml or .yml document. Query output is JSON on stdout.
+view writes the visualiser page with the document embedded (default <file>.html).`;
 
 /** Parse `--name value` options and positional arguments. */
 export function parseArgs(args: string[]): { positional: string[]; options: Record<string, string> } {
@@ -66,6 +69,25 @@ export function runQuery(file: string, op: string, positional: string[], options
   }
 }
 
+const VISUALISER = new URL('../../visualiser/dist/visualiser.html', import.meta.url);
+
+/** The visualiser page with the document embedded in its document slot. */
+export function viewHtml(document: unknown, template: string = readFileSync(VISUALISER, 'utf8')): string {
+  const embedded = JSON.stringify(document).replace(/<\//g, '<\\/');
+  if (!template.includes('<!--DOCUMENT-->')) throw new Error('Visualiser template has no document slot; rebuild with npm run build');
+  return template.replace('<!--DOCUMENT-->', () => embedded);
+}
+
+function view(file: string, out: string | undefined): number {
+  const document = loadDocumentFile(resolve(file));
+  const result = validateDocument(document);
+  if (!result.valid) console.error(`${file}: ${result.errors.length} validation error(s); the page is written anyway`);
+  const target = resolve(out ?? `${file}.html`);
+  writeFileSync(target, viewHtml(document));
+  console.log(`${target}: written`);
+  return 0;
+}
+
 function required(value: string | undefined, name: string): string {
   if (value === undefined) throw new Error(`Missing argument <${name}>\n${USAGE}`);
   return value;
@@ -75,6 +97,7 @@ export function main(argv: string[]): number {
   const [command, file, ...rest] = argv;
   try {
     if (command === 'validate' && file) return validate(file);
+    if (command === 'view' && file) return view(file, parseArgs(rest).options.out);
     if (command === 'query' && file && rest[0]) {
       const { positional, options } = parseArgs(rest.slice(1));
       const result = runQuery(file, rest[0], positional, options);
