@@ -233,6 +233,8 @@ with `enum`, never states.
 - R23. A `$ref` MUST resolve to `#/components/<Name>` where `<Name>` is a key
   of `components`, or to `#/structures/<name>` where `<name>` is a key of
   `structures`.
+  A `component` name MUST also name a declared component. JSON Pointer
+  path segments escape tilde as `~0` and slash as `~1`.
 - R24. A `$ref` node stands for the referenced component's `structure` (or
   the referenced structure's `root`). It MAY override `id`, `name`, `label`,
   `i18n`, `description`, `condition`, `kind`, `component`, `tokens`, `props`,
@@ -242,8 +244,14 @@ with `enum`, never states.
 - R25. A `$ref` node MUST NOT have `children` other than slot fillers: every
   child MUST carry `slot`, and every such slot MUST be declared by the
   referenced component. A `$ref` to a structure MUST NOT have children.
-- R26. A component `structure` MUST NOT contain, directly or through another
-  `$ref`, a `$ref` to itself.
+- R26. A component or screen structure MUST NOT contain, directly or through
+  another `$ref`, a `$ref` to itself, including mixed component/screen cycles.
+
+Type-dependent requirements such as table columns, grid tracks and overlay
+presentation are checked on the effective referenced root. An instance does
+not repeat fields it inherits. State descendants include referenced
+descendants. Queries for root events include inherited events unless
+overridden on the instance.
 
 `component` without `$ref` records that a node is an instance of a component
 without expanding a structure. It is the RECOMMENDED form when the component

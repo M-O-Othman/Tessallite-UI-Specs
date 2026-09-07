@@ -55,18 +55,19 @@ export function node(doc: SpecDocument, id: string): NodeHit | undefined {
 }
 
 function eventMatches(event: Event, value: string): boolean {
-  return event.event === value || event.handler === value || event.target === value || event.emits === value || event.actions.includes(value);
+  return event.event === value || event.handler === value || event.handler?.split(/\s*->\s*/).includes(value) === true || event.target === value || event.emits === value || event.actions.includes(value);
 }
 
 export function find(doc: SpecDocument, criteria: FindCriteria): NodeHit[] {
   const text = criteria.text?.toLowerCase();
   const results: NodeHit[] = [];
   for (const entry of doc.all()) {
-    const n = entry.node;
+    const n = doc.effectiveNode(entry.node);
     if (criteria.structure !== undefined && entry.owner !== criteria.structure) continue;
     if (criteria.type !== undefined && n.type !== criteria.type) continue;
     if (criteria.kind !== undefined && (n.kind ?? 'visible') !== criteria.kind) continue;
-    if (criteria.component !== undefined && n.component !== criteria.component && n.$ref !== `#/components/${criteria.component}`) continue;
+    const componentRef = criteria.component?.replace(/~/g, '~0').replace(/\//g, '~1');
+    if (criteria.component !== undefined && n.component !== criteria.component && n.$ref !== `#/components/${componentRef}`) continue;
     if (criteria.event !== undefined && !(n.events ?? []).some((e) => eventMatches(e, criteria.event!))) continue;
     if (text !== undefined && ![n.id, n.name, n.label, n.i18n, n.description].some((v) => v?.toLowerCase().includes(text))) continue;
     results.push(hit(entry));
@@ -83,7 +84,7 @@ export function pathTo(doc: SpecDocument, id: string): NodeHit[] {
 
 export function eventsOf(doc: SpecDocument, id: string): Event[] | undefined {
   const entry = doc.get(id);
-  return entry ? entry.node.events ?? [] : undefined;
+  return entry ? doc.effectiveNode(entry.node).events ?? [] : undefined;
 }
 
 export function childrenOf(doc: SpecDocument, id: string): NodeHit[] | undefined {

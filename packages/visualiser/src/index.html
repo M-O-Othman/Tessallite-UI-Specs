@@ -3,54 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tessallite-UI-Specs visualiser</title>
-<style>
-/*STYLE*/
-</style>
+<title>Tessallite | UI Specifications</title>
+<style>/*STYLE*/</style>
 </head>
 <body>
-<header class="toolbar">
-  <div class="brand">Tessallite-UI-Specs visualiser</div>
-  <label class="file">Open <input id="file" type="file" accept=".json,application/json"></label>
-  <fieldset class="views">
-    <legend>View</legend>
-    <label><input type="radio" name="view" value="components" checked> Components</label>
-    <label><input type="radio" name="view" value="structures"> Structures</label>
-  </fieldset>
-  <label class="select">Structure <select id="structure" aria-label="Structure"></select></label>
-  <fieldset class="filters">
-    <legend>Filters</legend>
-    <label><input type="checkbox" data-filter="hideLogical"> Hide logical</label>
-    <label><input type="checkbox" data-filter="hideLeaves"> Hide leaf types</label>
-    <label><input type="checkbox" data-filter="onlyComponent"> Only with component</label>
-    <label><input type="checkbox" data-filter="hideOverlays"> Hide overlays</label>
-    <label><input type="checkbox" data-filter="collapseRepeat"> Collapse repeat templates</label>
-  </fieldset>
-  <label class="depth">Depth <input id="depth" type="number" min="1" max="40" value="1"> <button id="depth-apply" type="button">Expand to depth</button></label>
-  <button id="collapse-all" type="button">Collapse all</button>
-  <button id="fit" type="button">Fit to view</button>
-  <button id="zoom-in" type="button" aria-label="Zoom in">Zoom +</button>
-  <button id="zoom-out" type="button" aria-label="Zoom out">Zoom -</button>
-  <label class="search">Search <input id="search" type="search" placeholder="id, name, label, component"> <span id="hits" class="hits"></span></label>
+<header class="app-header">
+  <a class="brand" href="#main"><img src="/*BRAND_PRIMARY*/" alt="Tessallite"><span>UI Specifications</span></a>
+  <span class="local-note">Local document viewer</span>
+  <label class="file primary">Open document<input id="file" type="file" accept=".json,.yaml,.yml,application/json" aria-label="Open document"></label>
 </header>
-<main class="workspace">
-  <svg id="canvas" class="canvas" role="application" aria-label="Graph canvas: drag to pan, Ctrl+wheel or the zoom buttons to zoom"></svg>
-  <aside class="side">
-    <section class="panel">
-      <h2>Selected node</h2>
-      <nav id="breadcrumb" class="breadcrumb" aria-label="Path"></nav>
-      <pre id="json" class="json">Select a card.</pre>
-    </section>
-    <section class="panel">
-      <h2 id="counts-title">Counts</h2>
-      <ul id="counts" class="counts"></ul>
-    </section>
+<div id="errors" class="errors" role="alert" hidden></div>
+<main id="main" class="workspace">
+  <aside class="navigation" aria-label="Document navigation">
+    <section class="document-heading"><div class="eyebrow">Document</div><h1 id="document-name">UI Specifications</h1><p id="document-meta">Open a document to explore its structure and behaviour.</p></section>
+    <fieldset class="views"><legend>Explore</legend>
+      <label><input type="radio" name="view" value="components" checked><span>Components</span></label>
+      <label><input type="radio" name="view" value="structures"><span>Structures</span></label>
+    </fieldset>
+    <section class="nav-section"><h2>Scope</h2><label class="sr-only" for="structure">Structure</label><select id="structure"><option value="">All structures</option></select></section>
+    <section class="nav-section search-section"><label for="search">Find in document</label><input id="search" type="search" placeholder="Name, label or handler"><p id="hits" class="muted" aria-live="polite"></p><div id="search-results" class="search-results"></div></section>
+    <details class="nav-section" id="filter-panel"><summary>Display options</summary>
+      <fieldset class="filters"><legend class="sr-only">Structure filters</legend>
+        <label><input type="checkbox" data-filter="hideLogical">Hide logical groups</label>
+        <label><input type="checkbox" data-filter="hideLeaves">Hide leaf types</label>
+        <label><input type="checkbox" data-filter="onlyComponent">Components only</label>
+        <label><input type="checkbox" data-filter="hideOverlays">Hide overlays</label>
+        <label><input type="checkbox" data-filter="collapseRepeat">Collapse repeat templates</label>
+      </fieldset>
+      <label class="detail-option"><input id="show-details" type="checkbox">Show detail branches</label>
+    </details>
+    <section class="nav-section counts-panel"><h2 id="counts-title">Visible nodes</h2><ul id="counts" class="counts"></ul></section>
+    <p class="nav-foot">Structure and behaviour.<br>Expand a branch to explore its contents.</p>
+  </aside>
+  <section class="graph-workspace" aria-label="Structure graph">
+    <header class="graph-header">
+      <div class="graph-primary"><h2 id="view-title">Component hierarchy</h2><div class="graph-toolbar" role="group" aria-label="Graph controls"><label class="depth">Depth <input id="depth" type="number" min="0" max="12" value="1"></label><button id="depth-apply" type="button">Apply</button><button id="collapse-all" type="button">Collapse all</button><span class="toolbar-spacer"></span><button id="maximise-view" type="button" aria-pressed="false" aria-label="Maximise graph view">Maximise view</button><button id="fit" type="button">Fit</button><button id="zoom-out" type="button" aria-label="Zoom out">−</button><button id="zoom-in" type="button" aria-label="Zoom in">+</button><button id="reset-zoom" type="button">100%</button></div></div>
+      <div class="graph-meta"><p id="view-description">Components nested under the surfaces that contain them.</p><span class="graph-hint">Drag or scroll to pan · Ctrl/Command + scroll to zoom</span><span id="visible-count"></span><span id="status" class="status" role="status" aria-live="polite">Open a document to begin.</span></div>
+    </header>
+    <div class="canvas-wrap">
+      <svg id="canvas" class="canvas" role="group" aria-label="Containment graph. Drag or scroll to pan; Control or Command and scroll to zoom. Enter selects a node; Space expands it."></svg>
+      <div id="empty" class="empty"><h2>Explore your UI specification</h2><p>Open or drop a JSON or YAML document to see how screens, components and interactions fit together.</p><p class="muted">Files are validated and read locally in your browser.</p></div>
+    </div>
+  </section>
+  <aside class="side" aria-label="Node inspector">
+    <header class="inspector-heading"><div class="eyebrow">Inspector</div><h2 id="detail-title">Select a node</h2><p id="detail-subtitle">Choose a card to read its purpose, behaviour and source.</p></header>
+    <nav id="breadcrumb" class="breadcrumb" aria-label="Containment path"></nav>
+    <div id="detail" class="detail"></div>
+    <details class="raw-section"><summary>Source JSON</summary><pre id="json" class="json">No node selected.</pre></details>
   </aside>
 </main>
-<footer id="status" class="status" aria-live="polite"></footer>
 <script id="tuis-document" type="application/json"><!--DOCUMENT--></script>
-<script>
-/*SCRIPT*/
-</script>
+<script>/*SCRIPT*/</script>
 </body>
 </html>

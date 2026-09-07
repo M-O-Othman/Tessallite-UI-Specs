@@ -2,21 +2,57 @@
 
 ## 0.2.0 (unreleased)
 
-- Visualiser: the page scrolls normally; zoom is Ctrl+wheel or the zoom buttons,
-  so the wheel no longer traps page scrolling over the canvas.
+### Viewer and validation repair - 2026-09-07
 
-- packages/visualiser: a self-contained HTML visualiser (vanilla JavaScript
-  and SVG, no dependencies) that draws a document as a pannable, zoomable
-  left-to-right graph at uniform level of detail. Components view opens at
-  group and component cards; Structures view opens with every root collapsed
-  to depth 1; detail (props, events, states, slots, structure, facts) appears
-  only when a card is expanded, one level at a time. Filters, search that
-  expands the path to hits, a detail panel with clickable breadcrumb, counts
-  by type and fit to view.
-- `tuis view <file> [--out page.html]`: writes the visualiser page with the
-  document embedded.
-- The specification, schema and vocabularies are unchanged; a 0.1 document
-  is a 0.2 document.
+- Screenshot follow-up: make the desktop graph fill the available viewport,
+  scroll navigation and inspector independently, add maximise/restore with
+  Escape, and keep graph position coherent when its viewport changes.
+- Apply the supplied brand kit's official primary logo and accessible
+  control borders. Embed the logo in the offline page and retain its licence.
+- Use white backgrounds regardless of OS theme, matching tessallite.io.
+  Consolidate the graph title, controls and both footer information areas in
+  a compact responsive header to leave more vertical space for drawing.
+
+- Changed Components into a containment hierarchy: surface, authored component
+  instance, then contained component instance. Distinct instances keep their
+  own descendants and behaviour. Components unreachable from a surface remain
+  available under Unreferenced when All structures is selected.
+- Kept both graph views. Components shows the component hierarchy; Structures
+  shows the full element tree and expands referenced subtrees at each use.
+- The viewer now opens the first surface at 100% zoom. Added a readable
+  inspector, optional detail branches, depth and collapse controls, Fit and
+  100% controls, and responsive navigation and inspector panels. The ordinary
+  wheel pans the desktop graph; Ctrl+wheel and the zoom controls scale it.
+- Added selectable search results for names, IDs, labels, components, event
+  names, handlers, effects and targets. Surface scope limits both views;
+  Structures display filters limit its graph and search results.
+- Parse and validate local JSON and YAML inside the offline page. The schema
+  validator, semantic checks and YAML parser are bundled; no network access or
+  separately installed runtime package is required. A failed or stale file
+  load does not replace the current valid document.
+- Moved viewer labels and interaction defaults into `viewer-config.json`; the
+  build embeds this configuration in the offline page instead of fetching it.
+- Corrected inherited table, grid and reference requirements; event queries;
+  escaped JSON Pointers; reference-cycle checks; and missing component and
+  data-binding checks.
+- `tuis view` now refuses invalid documents and source overwrite. Query depth
+  and missing-path failures now return errors.
+- Added exported-page DOM interaction coverage and authoring documentation.
+- Actual Chrome visual verification remains pending. The enabled Browser
+  extension is missing its native-host manifest and must be repaired through
+  the plugin UI; DOM tests do not certify layout or appearance.
+
+### Initial 0.2 visualiser history
+
+- The first 0.2 implementation introduced a self-contained HTML visualiser
+  using JavaScript and SVG, plus `tuis view <file> [--out page.html]` for a
+  page with an embedded document. It drew pannable, zoomable left-to-right
+  graphs with filters, path-expanding search, detail branches, breadcrumbs,
+  type counts and Fit.
+- That initial implementation opened component definitions under group cards
+  and auto-fitted broader content. Those interaction details are historical;
+  the repair above defines the current component hierarchy and initial view.
+- The format remains 0.1. Tooling 0.2 does not require a document migration.
 
 ## 0.1.0 (unreleased)
 

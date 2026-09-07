@@ -1,0 +1,14 @@
+/* Source: Tessallite frontend/src/theme/tokens.ts and brand website UI kit.
+   Local tokens keep exported documents independent of the product workspace. */
+:root {
+  color-scheme: only light;
+  --green: #006C35; --green-dark: #004E25; --gold: #D4AF37;
+  --bg: #FFFFFF; --panel: #FFFFFF; --ink: #333333; --muted: #5A6577;
+  --line: #CBD5E1; --control-line: #8A94A6; --card-line: #A8BFB3; --accent: var(--green);
+  --card: #FFFFFF; --logical: #F2F7F4; --overlay: #FFFBEE;
+  --hit: #A67C00; --edge: #A8BFB3; --dot: #C8D8CC;
+  --danger: #B33A3A; --danger-bg: #FFEBEE; --selected: #E8F5E9;
+  --radius-button: 10px; --radius-card: 14px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}

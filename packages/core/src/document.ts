@@ -1,4 +1,5 @@
 import type { Component, EventDefinition, Node, Slot, State, Structure, UiSpecDocument } from './types.js';
+const pointerKey = (value: string): string => value.replace(/~/g, '~0').replace(/\//g, '~1');
 
 /** A node with its position in the document. */
 export interface IndexedNode {
@@ -43,13 +44,13 @@ export class SpecDocument {
   constructor(readonly raw: UiSpecDocument) {
     for (const [name, structure] of Object.entries(structuresOf(raw))) {
       const key = raw.structures ? 'structures' : 'x-structures';
-      this.roots.set(name, this.index(structure.root, undefined, name, `/${key}/${name}/root`));
+      this.roots.set(name, this.index(structure.root, undefined, name, `/${key}/${pointerKey(name)}/root`));
     }
     for (const [name, component] of Object.entries(raw.components ?? {})) {
       const structure = componentStructure(component);
       if (!structure) continue;
       const key = component.structure ? 'structure' : 'x-structure';
-      this.componentRoots.set(name, this.index(structure, undefined, `component:${name}`, `/components/${name}/${key}`));
+      this.componentRoots.set(name, this.index(structure, undefined, `component:${name}`, `/components/${pointerKey(name)}/${key}`));
     }
   }
 
@@ -66,7 +67,7 @@ export class SpecDocument {
   }
 
   component(name: string): Component | undefined {
-    return this.raw.components?.[name];
+    return Object.hasOwn(this.raw.components ?? {}, name) ? this.raw.components[name] : undefined;
   }
 
   /** Walk every indexed node in document order. */
@@ -95,18 +96,29 @@ export class SpecDocument {
   resolveRef(ref: string): Node | undefined {
     const match = /^#\/(components|structures)\/(.+)$/.exec(ref);
     if (!match) return undefined;
-    const [, kind, name] = match;
+    const [, kind, encoded] = match;
+    const name = encoded.replace(/~1/g, '/').replace(/~0/g, '~');
     if (kind === 'components') {
       const component = this.component(name);
       return component ? componentStructure(component) : undefined;
     }
-    return structuresOf(this.raw)[name]?.root;
+    const structures = structuresOf(this.raw);
+    return Object.hasOwn(structures, name) ? structures[name].root : undefined;
+  }
+
+  /** Effective root fields of a reference; preserve instance identity and overrides. */
+  effectiveNode(node: Node, seen = new Set<string>()): Node {
+    if (!node.$ref || seen.has(node.$ref)) return node;
+    const target = this.resolveRef(node.$ref);
+    if (!target) return node;
+    seen.add(node.$ref);
+    return { ...this.effectiveNode(target, seen), ...node };
   }
 
   /** Slots a node declares: its own `slots`, else those of its component or $ref target. */
   declaredSlots(node: Node): Slot[] | undefined {
     if (node.slots) return node.slots;
-    const componentName = node.component ?? (node.$ref?.startsWith('#/components/') ? node.$ref.slice('#/components/'.length) : undefined);
+    const componentName = node.component ?? (node.$ref?.startsWith('#/components/') ? node.$ref.slice('#/components/'.length).replace(/~1/g, '/').replace(/~0/g, '~') : undefined);
     if (!componentName) return undefined;
     const component = this.component(componentName);
     return component ? componentSlots(component) : undefined;

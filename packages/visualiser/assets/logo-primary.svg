@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320">
+  <defs>
+    <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#EBCB55"/>
+      <stop offset="100%" stop-color="#B88F1F"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(40,48) scale(0.42)">
+    <polygon points="0,100 140,100 192,184 52,184" fill="#005A2C"/>
+    <polygon points="156,100 296,100 348,184 208,184" fill="#F2F7F4" stroke="#8A94A6" stroke-width="6"/>
+    <polygon points="312,100 452,100 504,184 364,184" fill="#004A24"/>
+    <polygon points="0,0 140,0 192,84 52,84" fill="#004A24"/>
+    <polygon points="156,0 296,0 348,84 208,84" fill="#006C35"/>
+    <polygon points="312,0 452,0 504,84 364,84" fill="url(#gGold)"/>
+  </g>
+  <text x="360" y="205" font-family="Inter, Arial, sans-serif" font-size="128" font-weight="700" letter-spacing="-1" fill="#333333">Tessallite</text>
+</svg>

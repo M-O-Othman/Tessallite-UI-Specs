@@ -53,7 +53,11 @@ export function runQuery(file: string, op: string, positional: string[], options
   const doc = openDocument(loadDocumentFile(resolve(file)));
   switch (op) {
     case 'structures': return structures(doc);
-    case 'tree': return tree(doc, positional[0], options.depth === undefined ? undefined : Number(options.depth));
+    case 'tree': {
+      const depth = options.depth === undefined ? undefined : Number(options.depth);
+      if (depth !== undefined && (!Number.isInteger(depth) || depth < 0)) throw new Error('--depth must be a non-negative integer');
+      return tree(doc, positional[0], depth);
+    }
     case 'node': return node(doc, required(positional[0], 'id'));
     case 'find': {
       const criteria: FindCriteria = {};
@@ -81,8 +85,13 @@ export function viewHtml(document: unknown, template: string = readFileSync(VISU
 function view(file: string, out: string | undefined): number {
   const document = loadDocumentFile(resolve(file));
   const result = validateDocument(document);
-  if (!result.valid) console.error(`${file}: ${result.errors.length} validation error(s); the page is written anyway`);
+  if (!result.valid) {
+    console.error(`${file}: ${result.errors.length} validation error(s); no page written`);
+    for (const issue of result.errors) console.error(`  ${formatIssue(issue)}`);
+    return 1;
+  }
   const target = resolve(out ?? `${file}.html`);
+  if (target === resolve(file)) throw new Error('Output must differ from the input document');
   writeFileSync(target, viewHtml(document));
   console.log(`${target}: written`);
   return 0;
@@ -101,7 +110,7 @@ export function main(argv: string[]): number {
     if (command === 'query' && file && rest[0]) {
       const { positional, options } = parseArgs(rest.slice(1));
       const result = runQuery(file, rest[0], positional, options);
-      if (result === undefined) {
+      if (result === undefined || (rest[0] === 'path-to' && Array.isArray(result) && result.length === 0)) {
         console.error('not found');
         return 1;
       }
@@ -115,4 +124,3 @@ export function main(argv: string[]): number {
     return 1;
   }
 }
-

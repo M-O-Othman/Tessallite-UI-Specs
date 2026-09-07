@@ -51,6 +51,15 @@ describe('tuis CLI', () => {
     expect(formatIssue({ rule: 'R1', path: '/a', id: 'x', message: 'm' })).toBe('R1     /a (x): m');
   });
 
+  it('rejects invalid exports, source overwrite and invalid depth; missing paths fail', () => {
+    expect(main(['view', INVALID])).toBe(1);
+    expect(errors.join('\n')).toContain('no page written');
+    expect(main(['view', MINIMAL, '--out', MINIMAL])).toBe(1);
+    expect(errors.at(-1)).toContain('Output must differ');
+    expect(main(['query', MINIMAL, 'tree', '--depth', 'wrong'])).toBe(1);
+    expect(main(['query', MINIMAL, 'path-to', 'missing'])).toBe(1);
+  });
+
   it('query runs every operation', () => {
     expect((runQuery(CONTAINMENT, 'structures', [], {}) as { name: string }[]).map((s) => s.name)).toEqual(['dashboard']);
     expect((runQuery(CONTAINMENT, 'tree', ['dashboard'], { depth: '0' }) as { children: unknown[] }).children).toHaveLength(6);

@@ -1,0 +1,122 @@
+{
+  "card": {
+    "layout": {
+      "width": 244,
+      "height": 76,
+      "gapX": 64,
+      "gapY": 18
+    },
+    "drawing": {
+      "cornerRadius": 10,
+      "textInsetX": 14,
+      "textFirstBaseline": 24,
+      "textLineSpacing": 19,
+      "textViewportTop": 8,
+      "textViewportHeight": 19,
+      "textRightInset": 14,
+      "textToggleGap": 8,
+      "textMaxCharacters": 32,
+      "textWithToggleMaxCharacters": 26,
+      "badgeInsetX": 10,
+      "badgeInsetY": 8,
+      "badgeMaxCharacters": 26,
+      "toggleInsetX": 30,
+      "toggleInsetY": 8,
+      "toggleSize": 24,
+      "toggleCornerRadius": 6,
+      "toggleTextX": 12,
+      "toggleTextY": 17
+    }
+  },
+  "zoom": {
+    "initialScale": 1,
+    "initialOffset": 40,
+    "minimumScale": 0.05,
+    "maximumScale": 4,
+    "fitMaximumScale": 1.5,
+    "fitPadding": 40,
+    "readableScale": 1,
+    "readablePadding": 32,
+    "wheelSensitivity": 0.0015,
+    "wheelPanFactor": 1,
+    "inFactor": 1.25,
+    "outFactor": 0.8
+  },
+  "expansion": {
+    "defaultDepth": 1,
+    "componentTargetDepth": 12,
+    "searchMaxDepth": 40
+  },
+  "captions": {
+    "errors": {
+      "documentNotLoaded": "Document not loaded. Correct the reported errors and open it again.",
+      "cannotOpen": "Cannot open ",
+      "cannotRead": "Cannot read ",
+      "cannotReadEmbedded": "Cannot read embedded document"
+    },
+    "document": {
+      "allStructures": "All structures",
+      "nodes": "nodes",
+      "components": "components",
+      "validDocument": "Valid document",
+      "structures": "structures",
+      "embeddedSource": "Embedded document"
+    },
+    "emptyView": {
+      "title": "No nodes in this view",
+      "description": "Choose another scope or change the display options."
+    },
+    "views": {
+      "components": {
+        "title": "Component hierarchy",
+        "description": "Components nested under the surfaces that contain them."
+      },
+      "structures": {
+        "title": "UI structure",
+        "description": "Visible elements and logical groups in containment order."
+      }
+    },
+    "visibleNodes": "visible nodes",
+    "search": {
+      "results": "results",
+      "hidden": "hidden by display options"
+    },
+    "inspector": {
+      "emptyTitle": "Select a node",
+      "emptySubtitle": "Choose a card to read its purpose, behaviour and source.",
+      "emptySource": "No node selected.",
+      "sectionTitles": {
+        "purpose": "Purpose",
+        "identity": "Identity",
+        "behaviour": "Behaviour",
+        "instanceProperties": "Instance properties",
+        "componentProperties": "Component properties",
+        "usedBy": "Used by",
+        "details": "Details"
+      },
+      "additionalSections": [
+        "states",
+        "slots",
+        "columns",
+        "tracks",
+        "placement",
+        "data",
+        "a11y",
+        "implementation",
+        "tokens"
+      ],
+      "goTo": "Go to ",
+      "actionSeparator": " → "
+    },
+    "graph": {
+      "expand": "Expand",
+      "collapse": "Collapse"
+    },
+    "workspace": {
+      "maximise": "Maximise view",
+      "restore": "Restore view",
+      "maximiseLabel": "Maximise graph view",
+      "restoreLabel": "Restore graph view"
+    }
+  }
+}

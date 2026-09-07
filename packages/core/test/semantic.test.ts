@@ -121,10 +121,11 @@ describe('semantic rules', () => {
   it('R20 state names unique, R21 present ids are descendants', () => {
     const doc = clone(example('containment'));
     rawNode(doc, 'kpi-card').states = ['default', 'default'];
-    (rawNode(doc, 'dashboard').states![1] as { present: string[] }).present.push('kpi-summary-text', 'status-badge-dot');
+    (rawNode(doc, 'dashboard').states![1] as { present: string[] }).present.push('kpi-summary-text', 'status-badge-dot', 'missing-descendant');
     const found = messages(doc);
     expect(found).toContainEqual(expect.stringContaining('R20 state "default" declared twice'));
-    expect(found).toContainEqual(expect.stringContaining('R21 state "loading" lists "status-badge-dot"'));
+    expect(found).toContainEqual(expect.stringContaining('R21 state "loading" lists "missing-descendant"'));
+    expect(found).not.toContainEqual(expect.stringContaining('lists "status-badge-dot"'));
     expect(found).not.toContainEqual(expect.stringContaining('lists "kpi-summary-text"'));
   });
 
@@ -178,6 +179,6 @@ describe('rules tuned on the Tessallite Excel plugin', () => {
     ];
     expect(validateDocument(doc).errors.map((e) => `${e.rule} ${e.message}`)).toEqual([]);
     delete table.data.columns;
-    expect(validateDocument(doc).errors.map((e) => e.rule)).toEqual(['R4', 'R4']);
+    expect(validateDocument(doc).errors.map((e) => e.rule)).toEqual(['R6', 'R4', 'R4']);
   });
 });

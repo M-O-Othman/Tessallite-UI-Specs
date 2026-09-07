@@ -1,6 +1,7 @@
 /** Pure layout functions: coordinates only, no DOM. */
+import viewerConfig from './viewer-config.json' with { type: 'json' };
 
-export const CARD = Object.freeze({ width: 220, height: 66, gapX: 90, gapY: 14 });
+export const CARD = Object.freeze(viewerConfig.card.layout);
 
 /**
  * Layered left-to-right tree layout. Depth decides x; leaves are stacked
@@ -56,9 +57,9 @@ export function bounds(positions) {
 }
 
 /** Scale and translation that fit a box into a viewport with padding. */
-export function fitTransform(box, viewport, padding = 40) {
-  if (!box || box.width === 0 || box.height === 0) return { k: 1, tx: padding, ty: padding };
-  const k = Math.min((viewport.width - 2 * padding) / box.width, (viewport.height - 2 * padding) / box.height, 1.5);
+export function fitTransform(box, viewport, padding = viewerConfig.zoom.fitPadding) {
+  if (!box || box.width === 0 || box.height === 0) return { k: viewerConfig.zoom.initialScale, tx: padding, ty: padding };
+  const k = Math.max(viewerConfig.zoom.minimumScale, Math.min((viewport.width - 2 * padding) / box.width, (viewport.height - 2 * padding) / box.height, viewerConfig.zoom.fitMaximumScale));
   const tx = (viewport.width - box.width * k) / 2 - box.x * k;
   const ty = (viewport.height - box.height * k) / 2 - box.y * k;
   return { k, tx, ty };

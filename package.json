@@ -17,6 +17,8 @@
     "check": "npm run build && npm run validate:examples && npm test"
   },
   "devDependencies": {
+    "esbuild": "^0.28.2",
+    "happy-dom": "^20.14.0",
     "tsx": "^4.23.13",
     "typescript": "^5.9.3",
     "vitest": "^3.2.7"

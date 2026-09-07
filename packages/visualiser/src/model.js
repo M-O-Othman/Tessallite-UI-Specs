@@ -4,14 +4,15 @@
  * definitions, structure entries, detail sections and their items. A vnode
  * is drawn as a summary card; its detail appears only when expanded.
  */
+import viewerConfig from './viewer-config.json' with { type: 'json' };
 
 export const LEAF_TYPES = new Set(['text', 'icon', 'divider', 'skeleton']);
-export const DEFAULT_FILTERS = Object.freeze({ hideLogical: false, hideLeaves: false, onlyComponent: false, hideOverlays: false, collapseRepeat: false });
+export const DEFAULT_FILTERS = Object.freeze({ hideLogical: false, hideLeaves: false, onlyComponent: false, hideOverlays: false, collapseRepeat: false, hideDetails: false });
 const ENTRY_FACTS = ['kind', 'name', 'label', 'i18n', 'description', 'condition', 'repeat', 'presentation', 'slot', 'icon', 'column', 'placement', 'tracks', '$ref'];
 const ENTRY_SECTIONS = ['props', 'events', 'states', 'slots', 'columns', 'a11y', 'data', 'implementation', 'tokens'];
 const COMPONENT_SECTIONS = ['props', 'events', 'states', 'slots'];
 
-function structuresOf(doc) { return doc.structures || doc['x-structures'] || {}; }
+export function structuresOf(doc) { return doc.structures || doc['x-structures'] || {}; }
 function componentStructure(component) { return component.structure || component['x-structure']; }
 function sectionValue(obj, key) { return obj[key] ?? obj[`x-${key}`]; }
 function walk(node, fn) { fn(node); for (const child of node.children || []) walk(child, fn); }
@@ -20,11 +21,25 @@ function walk(node, fn) { fn(node); for (const child of node.children || []) wal
 export function componentOf(node) {
   if (node.component) return node.component;
   const ref = node.$ref;
-  return typeof ref === 'string' && ref.startsWith('#/components/') ? ref.slice('#/components/'.length) : undefined;
+  return typeof ref === 'string' && ref.startsWith('#/components/') ? ref.slice('#/components/'.length).replace(/~1/g, '/').replace(/~0/g, '~') : undefined;
 }
 
 /** Group of a component definition: group, then package, then Ungrouped. */
 export function groupOf(component) { return component.group || component.package || 'Ungrouped'; }
+
+/** Resolve inherited root facts without changing the authored source object. */
+export function effectiveNode(model, node, seen = new Set()) {
+  if (!node.$ref || seen.has(node.$ref)) return node;
+  seen.add(node.$ref);
+  const target = referenceTarget(model, node.$ref);
+  return target ? { ...effectiveNode(model, target.node, seen), ...node } : node;
+}
+
+function referenceTarget(model, reference) {
+  const component = reference.startsWith('#/components/');
+  const name = reference.slice(13).replace(/~1/g, '/').replace(/~0/g, '~');
+  return component ? model.componentRoots.get(name) : model.structureRoots.find((root) => root.owner === name);
+}
 
 /**
  * Builds the model: structure entries (one per node, with parent and
@@ -62,17 +77,20 @@ export function buildModel(doc) {
   for (const [name, component] of Object.entries(components)) { const s = componentStructure(component); if (s) walk(s, (n) => record(name, 'component', n)); }
   const groups = new Map();
   for (const card of cards.values()) { if (!groups.has(card.group)) groups.set(card.group, []); groups.get(card.group).push(card); }
-  return { doc, entries, structureRoots, componentRoots, cards, groups: [...groups.entries()].map(([name, items]) => ({ name, items })), edges };
+  return { doc, entries, structureRoots, componentRoots, cards, groups: [...groups.entries()].map(([name, items]) => ({ name, items })), edges, virtual: new Map() };
 }
 
 // ---- vnodes ---------------------------------------------------------------
 
+const encode = (name) => encodeURIComponent(name).replace(/\./g, '%2E');
 export const vid = {
-  group: (name) => `group:${name}`,
-  component: (name) => `component:${name}`,
+  group: (name) => `group:${encode(name)}`,
+  component: (name) => `component:${encode(name)}`,
   entry: (id) => `entry:${id}`,
+  structure: (name) => `ct:${encode(name)}`,
+  instance: (parentVid, name, nodeId) => `${parentVid}/${encode(name)}@${encode(nodeId)}`,
   section: (parentVid, key) => `${parentVid}#${key}`,
-  item: (sectionVid, key) => `${sectionVid}.${key}`,
+  item: (sectionVid, key) => `${sectionVid}.${encode(key)}`,
 };
 
 function summarise(value) {
@@ -145,45 +163,147 @@ export function componentVnode(card) {
   return { vid: vid.component(card.id), kind: 'component', card, lines: [card.id, card.hasStructure ? 'component, has structure' : 'component'], data: card.definition };
 }
 
-export function groupVnode(group) {
+function groupVnode(group) {
   return { vid: vid.group(group.name), kind: 'group', group, lines: [group.name, `${group.items.length} components`], data: { group: group.name, components: group.items.map((c) => c.id) } };
 }
 
+/** Root of the Components view: one card per structure (a screen). */
+export function structureVnode(root) {
+  return { vid: vid.structure(root.owner), kind: 'structure', entry: root, lines: [root.owner, `structure, root ${root.id}`], data: root.node };
+}
+
+/**
+ * Component instances contained in `node`, at the first component level:
+ * a node that instantiates a component is one instance; other nodes are
+ * transparent and yield the instances under them. Every authored instance
+ * is retained: two instances may have different children and behaviour.
+ */
+function containedInstances(parentVid, node, model, ancestors, includeSelf) {
+  const found = [];
+  const collect = (n, self, refs = new Set()) => {
+    const name = self ? componentOf(n) : undefined;
+    if (name && model.cards.has(name)) { found.push({ name, node: n }); return; }
+    for (const child of n.children || []) collect(child, true, refs);
+    if (n.$ref?.startsWith('#/structures/') && !refs.has(n.$ref)) {
+      const name = n.$ref.slice(13).replace(/~1/g, '/').replace(/~0/g, '~');
+      const target = model.structureRoots.find((root) => root.owner === name);
+      if (target) collect(target.node, true, new Set([...refs, n.$ref]));
+    }
+  };
+  collect(node, includeSelf);
+  return found.map((m) => instanceVnode(parentVid, m, model, ancestors));
+}
+
+function instanceVnode(parentVid, m, model, ancestors) {
+  const card = model.cards.get(m.name);
+  const n = m.node;
+  const lines = [m.name, `${n.type} ${n.id}`];
+  return { vid: vid.instance(parentVid, m.name, n.id), kind: 'component', card, node: n, ancestors: [...ancestors, m.name], badge: card.group === 'Ungrouped' ? '' : card.group, lines, data: card.definition };
+}
+
+/** Components no structure or component instantiates. */
+function unreferencedGroup(model) {
+  const reachable = new Set();
+  const visit = (node) => {
+    const name = componentOf(node);
+    if (name && !reachable.has(name)) {
+      reachable.add(name);
+      const own = model.componentRoots.get(name);
+      if (own) visit(own.node);
+    }
+    for (const child of node.children || []) visit(child);
+    if (node.$ref?.startsWith('#/structures/')) {
+      const name = node.$ref.slice(13).replace(/~1/g, '/').replace(/~0/g, '~');
+      const key = 'structure:' + name;
+      if (!reachable.has(key)) { reachable.add(key); const root = model.structureRoots.find((r) => r.owner === name); if (root) visit(root.node); }
+    }
+  };
+  for (const root of model.structureRoots) visit(root.node);
+  const items = [...model.cards.values()].filter((c) => !reachable.has(c.id));
+  return items.length ? { name: 'Unreferenced', items } : undefined;
+}
+
 /** Children a vnode reveals when expanded. */
-export function childrenOf(vnode, model, filters) {
+function rawChildren(vnode, model, filters) {
   switch (vnode.kind) {
     case 'group': return vnode.group.items.map(componentVnode);
+    case 'structure': return containedInstances(vnode.vid, vnode.entry.node, model, [], true);
     case 'component': {
+      const contained = [];
+      if (vnode.node) {
+        // Internals from the component's own structure first (unless it recurses), then what the instance holds.
+        const own = model.componentRoots.get(vnode.card.id);
+        const recursive = vnode.ancestors.slice(0, -1).includes(vnode.card.id);
+        if (own && !recursive && (vnode.node.$ref || !vnode.node.children?.length)) contained.push(...containedInstances(vnode.vid, own.node, model, vnode.ancestors, componentOf(own.node) !== vnode.card.id));
+        contained.push(...containedInstances(vnode.vid, vnode.node, model, vnode.ancestors, false));
+      } else {
+        const own = model.componentRoots.get(vnode.card.id);
+        if (own) contained.push(...containedInstances(vnode.vid, own.node, model, [vnode.card.id], componentOf(own.node) !== vnode.card.id));
+      }
+      const seen = new Set();
+      const unique = contained.filter((c) => (seen.has(c.vid) ? false : seen.add(c.vid)));
       const sections = sectionsOf(vnode.vid, vnode.card.definition, COMPONENT_SECTIONS);
-      const root = model.componentRoots.get(vnode.card.id);
+      const root = vnode.node ? model.entries.get(vnode.node.id) : model.componentRoots.get(vnode.card.id);
       if (root) sections.push({ vid: vid.section(vnode.vid, 'structure'), kind: 'section', lines: ['structure', `root ${root.id}`], data: root.node, items: [entryVnode(root)] });
-      return sections;
+      return [...unique, ...(filters.hideDetails ? [] : sections)];
     }
     case 'entry': {
       const detail = sectionsOf(vnode.vid, vnode.entry.node, ENTRY_SECTIONS, ENTRY_FACTS);
-      const contained = (filters.collapseRepeat && vnode.entry.node.repeat === true) ? [] : shownChildren(vnode.entry, filters).map(entryVnode);
-      return [...detail, ...contained];
+      const reference = vnode.entry.node.$ref;
+      const refs = vnode.refs || [];
+      const inherited = [];
+      const seen = new Set(refs);
+      let next = reference;
+      while (next && !seen.has(next)) {
+        seen.add(next);
+        const target = referenceTarget(model, next);
+        if (!target) break;
+        inherited.push(...shownChildren(target, filters));
+        next = target.node.$ref;
+      }
+      const entries = [...inherited, ...shownChildren(vnode.entry, filters)];
+      const contained = (filters.collapseRepeat && vnode.entry.node.repeat === true) ? [] : entries.map((entry) => ({ ...entryVnode(entry), refs: [...seen] }));
+      return [...(filters.hideDetails ? [] : detail), ...contained];
     }
     case 'section': return vnode.items;
     default: return [];
   }
 }
 
+/** Register actual parents, including component detail branches, without guessing from node ids. */
+export function childrenOf(vnode, model, filters = DEFAULT_FILTERS) {
+  const children = rawChildren(vnode, model, filters).map((child) => {
+    // A definition may appear in many instances; each drawn entry needs its own identity.
+    if (child.kind === 'entry' && (vnode.kind === 'section' || vnode.context || (vnode.entry?.node.$ref && child.entry.parent !== vnode.entry))) {
+      child = { ...child, vid: `${vnode.vid}~${encode(child.entry.id)}`, context: true };
+    }
+    return { ...child, parent: vnode.vid };
+  });
+  model.virtual.set(vnode.vid, vnode);
+  for (const child of children) model.virtual.set(child.vid, child);
+  return children;
+}
+
 /** Parent vnode id, for breadcrumbs and search expansion. */
 export function parentVid(vnode, model) {
+  if (vnode.parent !== undefined) return vnode.parent;
   if (vnode.kind === 'entry') {
     const e = vnode.entry;
     if (e.parent) return vid.entry(e.parent.id);
     return e.ownerKind === 'component' ? vid.section(vid.component(e.owner), 'structure') : undefined;
   }
-  if (vnode.kind === 'component') return vid.group(vnode.card.group);
+  if (vnode.kind === 'component') return vnode.node ? vnode.vid.slice(0, vnode.vid.lastIndexOf('/')) : (unreferencedGroup(model)?.items.some((card) => card.id === vnode.card.id) ? vid.group('Unreferenced') : undefined);
   if (vnode.kind === 'section' || vnode.kind === 'item') return vnode.vid.slice(0, vnode.vid.lastIndexOf(vnode.kind === 'section' ? '#' : '.'));
   return undefined;
 }
 
-/** Roots of a view: group vnodes for Components, structure entry vnodes for Structures. */
+/** Roots of a view: structure cards (plus the unreferenced group) for Components, structure entry vnodes for Structures. */
 export function rootsOf(model, view) {
-  return view === 'components' ? model.groups.map(groupVnode) : model.structureRoots.map(entryVnode);
+  if (view === 'structures') return model.structureRoots.map(entryVnode);
+  const roots = model.structureRoots.map(structureVnode);
+  const rest = unreferencedGroup(model);
+  if (rest) roots.push(groupVnode(rest));
+  return roots;
 }
 
 /** The drawn forest for a view under expansion and filters. */
@@ -217,21 +337,35 @@ export function expandedToDepth(model, view, depth, filters = DEFAULT_FILTERS) {
   return expanded;
 }
 
-/** Search hits as vnodes: structure entries (id, name, label, i18n, component, type) and component cards (name). */
+/** Search hits as vnodes: component instances by name (Components view) or structure entries by id, name, label, i18n, component and type. */
 export function search(model, view, query) {
   const q = query.trim().toLowerCase();
   if (!q) return [];
   const hits = [];
   if (view === 'components') {
-    for (const card of model.cards.values()) if (card.id.toLowerCase().includes(q)) hits.push(componentVnode(card));
+    const visit = (vnode) => {
+      for (const kid of childrenOf(vnode, model, DEFAULT_FILTERS)) {
+        if (kid.kind !== 'component') continue;
+        if (matches(effectiveNode(model, kid.node || {}), q, kid.card.id, kid.card.definition.description)) hits.push(kid);
+        visit(kid);
+      }
+    };
+    for (const root of rootsOf(model, view)) visit(root);
+    return hits;
   }
-  for (const entry of model.entries.values()) {
-    if (view === 'structures' && entry.ownerKind !== 'structure') continue;
-    if (view === 'components' && entry.ownerKind !== 'component') continue;
-    const n = entry.node;
-    if ([n.id, n.name, n.label, n.i18n, componentOf(n), n.type].some((f) => typeof f === 'string' && f.toLowerCase().includes(q))) hits.push(entryVnode(entry));
+  const filters = { ...DEFAULT_FILTERS, hideDetails: true };
+  const forest = visibleForest(model, view, filters, expandedToDepth(model, view, viewerConfig.expansion.searchMaxDepth, filters));
+  for (const item of forest.nodes) {
+    const vnode = item.vnode;
+    if (vnode.kind === 'entry' && matches(effectiveNode(model, vnode.entry.node), q)) hits.push(vnode);
   }
   return hits;
+}
+
+function matches(n, query, ...extra) {
+  return [n.id, n.name, n.label, n.i18n, n.description, componentOf(n), n.type, ...extra,
+    ...(n.events || []).flatMap((e) => [e.event, e.handler, e.effect, e.target])]
+    .some((value) => typeof value === 'string' && value.toLowerCase().includes(query));
 }
 
 /** Ancestor chain of vnode ids from the root down to the vnode, inclusive. */
@@ -248,10 +382,19 @@ export function pathOf(vnode, model) {
 
 /** Rebuild a vnode from its id. */
 export function resolveVid(id, model, filters = DEFAULT_FILTERS) {
-  if (id.startsWith('group:')) { const g = model.groups.find((x) => x.name === id.slice(6)); return g ? groupVnode(g) : undefined; }
-  if (id.startsWith('component:') && !id.includes('#')) { const c = model.cards.get(id.slice(10)); return c ? componentVnode(c) : undefined; }
+  if (!id) return undefined;
+  if (model.virtual.has(id)) return model.virtual.get(id);
+  if (id.startsWith('group:')) { const g = id === 'group:Unreferenced' ? unreferencedGroup(model) : model.groups.find((x) => vid.group(x.name) === id); return g ? groupVnode(g) : undefined; }
+  if (id.startsWith('component:') && !id.includes('#')) { const c = model.cards.get(decodeURIComponent(id.slice(10))); return c ? componentVnode(c) : undefined; }
   if (id.startsWith('entry:') && !id.includes('#')) { const e = model.entries.get(id.slice(6)); return e ? entryVnode(e) : undefined; }
+  if (id.startsWith('ct:') && !/[#.]/.test(id)) {
+    const slash = id.lastIndexOf('/');
+    if (slash < 0) { const r = model.structureRoots.find((x) => vid.structure(x.owner) === id); return r ? structureVnode(r) : undefined; }
+    const parent = resolveVid(id.slice(0, slash), model, filters);
+    return parent ? childrenOf(parent, model, filters).find((k) => k.vid === id) : undefined;
+  }
   const cut = Math.max(id.lastIndexOf('#'), id.lastIndexOf('.'));
+  if (cut < 1) return undefined;
   const parent = resolveVid(id.slice(0, cut), model, filters);
   return parent ? childrenOf(parent, model, filters).find((k) => k.vid === id) : undefined;
 }

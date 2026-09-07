@@ -808,6 +808,8 @@
       "allOf": [
         {
           "if": {
+            "required": ["type"],
+            "not": { "required": ["$ref"] },
             "properties": {
               "type": {
                 "enum": [
@@ -827,6 +829,8 @@
         },
         {
           "if": {
+            "required": ["type"],
+            "not": { "required": ["$ref"] },
             "properties": {
               "type": {
                 "const": "table"
@@ -841,6 +845,8 @@
         },
         {
           "if": {
+            "required": ["type"],
+            "not": { "required": ["$ref"] },
             "properties": {
               "type": {
                 "const": "grid"
@@ -855,6 +861,8 @@
         },
         {
           "if": {
+            "required": ["type"],
+            "not": { "required": ["$ref"] },
             "properties": {
               "type": {
                 "const": "cell"
@@ -869,6 +877,8 @@
         },
         {
           "if": {
+            "required": ["type"],
+            "not": { "required": ["$ref"] },
             "properties": {
               "type": {
                 "enum": [

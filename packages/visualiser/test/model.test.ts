@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildModel, childrenOf, countsByType, DEFAULT_FILTERS, expandPaths, expandedToDepth, pathOf, resolveVid, search, vid, visibleForest } from '../src/model.js';
+import { buildModel, childrenOf, countsByType, DEFAULT_FILTERS, expandPaths, expandedToDepth, pathOf, resolveVid, rootsOf, search, vid, visibleForest } from '../src/model.js';
 
 const ROOT = new URL('../../../', import.meta.url);
 const doc = JSON.parse(readFileSync(new URL('examples/containment.json', ROOT), 'utf8'));
@@ -8,37 +8,76 @@ const model = buildModel(doc);
 const F = DEFAULT_FILTERS;
 
 describe('model: components', () => {
-  it('groups component definitions and records used-by edges', () => {
-    expect(model.groups.map((g) => g.name)).toEqual(['Ungrouped']);
+  it('records used-by per component and component-to-component uses', () => {
     expect([...model.cards.keys()]).toEqual(['StatusBadge', 'Dialog']);
     expect(model.cards.get('StatusBadge')!.usedBy).toEqual([{ owner: 'dashboard', ownerKind: 'structure', nodeId: 'dashboard-status' }]);
     expect(model.edges).toEqual([]);
   });
 
-  it('draws component-to-component uses as edges', () => {
-    const d2 = JSON.parse(JSON.stringify(doc));
-    d2.components.Panel = { description: 'p', group: 'Layout', structure: { id: 'panel', type: 'container', children: [{ id: 'panel-badge', type: 'badge', $ref: '#/components/StatusBadge' }] } };
-    const m2 = buildModel(d2);
-    expect(m2.edges).toEqual([{ from: 'Panel', to: 'StatusBadge' }]);
-    expect(m2.groups.map((g) => g.name)).toEqual(['Ungrouped', 'Layout']);
-  });
-
-  it('opens at the group level with components collapsed and no detail drawn', () => {
+  it('opens at the structure level with the top-level component instances collapsed and no detail drawn', () => {
     const expanded = expandedToDepth(model, 'components', 1);
     const forest = visibleForest(model, 'components', F, expanded);
-    expect(forest.nodes.map((n) => n.id)).toEqual(['group:Ungrouped', 'component:StatusBadge', 'component:Dialog']);
+    expect(forest.nodes.map((n) => n.id)).toEqual(['ct:dashboard', 'ct:dashboard/StatusBadge@dashboard-status', 'ct:dashboard/Dialog@confirm-delete']);
     expect(forest.nodes.filter((n) => n.vnode.kind === 'component').every((n) => n.collapsed)).toBe(true);
   });
 
-  it('expanding a component reveals sections one level at a time, then entries, then the structure root', () => {
-    const comp = resolveVid('component:Dialog', model)!;
-    expect(childrenOf(comp, model, F).map((c) => c.lines)).toEqual([['props', '1 entry'], ['events', '1 entry'], ['slots', '3 entries'], ['structure', 'root dialog-frame']]);
-    const expanded = new Set(['group:Ungrouped', 'component:Dialog', 'component:Dialog#slots']);
+  it('nests distinct component instances from definitions and preserves explicit instance children', () => {
+    const d2 = JSON.parse(JSON.stringify(doc));
+    d2.components.Panel = { description: 'p', group: 'Layout', structure: { id: 'panel', type: 'container', children: [
+      { id: 'panel-badge', type: 'badge', $ref: '#/components/StatusBadge' }, { id: 'panel-badge-2', type: 'badge', component: 'StatusBadge' },
+    ] } };
+    d2.structures.dashboard.root.children.push({ id: 'dashboard-panel', type: 'container', component: 'Panel' });
+    const m2 = buildModel(d2);
+    const panel = resolveVid('ct:dashboard/Panel@dashboard-panel', m2)!;
+    expect(panel.badge).toBe('Layout');
+    const kids = childrenOf(panel, m2, F);
+    expect(kids.filter((k) => k.kind === 'component').map((k) => k.lines)).toEqual([['StatusBadge', 'badge panel-badge'], ['StatusBadge', 'badge panel-badge-2']]);
+    expect(kids.filter((k) => k.kind === 'section').map((k) => k.lines[0])).toEqual(['structure']);
+    expect(pathOf(kids[1], m2).map((v) => v.lines[0])).toEqual(['dashboard', 'Panel', 'StatusBadge']);
+    expect(rootsOf(m2, 'components').map((r) => r.vid)).toEqual(['ct:dashboard']);
+    d2.structures.dashboard.root.children.at(-1).children = [{ id: 'dp-dialog', type: 'dialog', component: 'Dialog' }];
+    const explicit = buildModel(d2);
+    expect(childrenOf(resolveVid('ct:dashboard/Panel@dashboard-panel', explicit)!, explicit, F).filter((k) => k.kind === 'component').map((k) => k.card.id)).toEqual(['Dialog']);
+  });
+
+  it('does not recurse into a component that contains itself', () => {
+    const d3 = JSON.parse(JSON.stringify(doc));
+    d3.components.Tree = { description: 't', structure: { id: 'tree', type: 'list', children: [{ id: 'tree-child', type: 'list-item', component: 'Tree' }] } };
+    d3.structures.dashboard.root.children.push({ id: 'dashboard-tree', type: 'list', component: 'Tree' });
+    const m3 = buildModel(d3);
+    const tree = resolveVid('ct:dashboard/Tree@dashboard-tree', m3)!;
+    const inner = childrenOf(tree, m3, F).filter((k) => k.kind === 'component');
+    expect(inner.map((k) => k.card.id)).toEqual(['Tree']);
+    expect(childrenOf(inner[0], m3, F).filter((k) => k.kind === 'component')).toEqual([]);
+  });
+
+  it('expanding an instance reveals its sections one level at a time, then entries, then the instance node', () => {
+    const inst = 'ct:dashboard/Dialog@confirm-delete';
+    const comp = resolveVid(inst, model)!;
+    expect(childrenOf(comp, model, F).map((c) => c.lines)).toEqual([['props', '1 entry'], ['events', '1 entry'], ['slots', '3 entries'], ['structure', 'root confirm-delete']]);
+    const expanded = new Set(['ct:dashboard', inst, `${inst}#slots`]);
     const forest = visibleForest(model, 'components', F, expanded);
-    expect(forest.nodes.map((n) => n.id)).toContain('component:Dialog#slots.0');
-    expect(forest.nodes.map((n) => n.id)).not.toContain('entry:dialog-frame');
-    expanded.add('component:Dialog#structure');
-    expect(visibleForest(model, 'components', F, expanded).nodes.map((n) => n.id)).toContain('entry:dialog-frame');
+    expect(forest.nodes.map((n) => n.id)).toContain(`${inst}#slots.0`);
+    expect(forest.nodes.map((n) => n.id)).not.toContain('entry:confirm-delete');
+    expanded.add(`${inst}#structure`);
+    expect(visibleForest(model, 'components', F, expanded).nodes.map((n) => n.id)).toContain(`${inst}#structure~confirm-delete`);
+  });
+
+  it('components nothing instantiates sit under an Unreferenced group', () => {
+    const d4 = JSON.parse(JSON.stringify(doc));
+    const prune = (n: { id: string; children?: { id: string }[] }) => { n.children = n.children?.filter((c) => c.id !== 'dashboard-status'); n.children?.forEach(prune); };
+    prune(d4.structures.dashboard.root);
+    const m4 = buildModel(d4);
+    expect(rootsOf(m4, 'components').map((r) => r.vid)).toEqual(['ct:dashboard', 'group:Unreferenced']);
+    const forest = visibleForest(m4, 'components', F, expandedToDepth(m4, 'components', 1));
+    expect(forest.nodes.map((n) => n.id)).toContain('component:StatusBadge');
+    expect(pathOf(resolveVid('component:StatusBadge', m4)!, m4).map((v) => v.vid)).toEqual(['group:Unreferenced', 'component:StatusBadge']);
+  });
+
+  it('search in the Components view finds instances by name and expands the path', () => {
+    const hits = search(model, 'components', 'status');
+    expect(hits.map((h) => h.vid)).toEqual(['ct:dashboard/StatusBadge@dashboard-status']);
+    expect([...expandPaths(hits, new Set(), model)]).toEqual(['ct:dashboard']);
   });
 });
 
@@ -80,12 +119,12 @@ describe('model: structures', () => {
     expect(expanded.has('entry:confirm-delete')).toBe(true);
     expect(visibleForest(model, 'structures', F, expanded).nodes.map((n) => n.id)).toContain('entry:confirm-delete-title');
     expect(search(model, 'structures', 'StatusBadge').map((h) => h.vid)).toEqual(['entry:dashboard-status']);
-    expect(search(model, 'components', 'badge').map((h) => h.vid)).toEqual(['component:StatusBadge', 'entry:status-badge', 'entry:status-badge-dot', 'entry:status-badge-text']);
+    expect(search(model, 'components', 'badge').map((h) => h.vid)).toEqual(['ct:dashboard/StatusBadge@dashboard-status']);
   });
 
-  it('paths run from the group through the component and structure section to the entry', () => {
+  it('paths run from the component through its structure section to the entry', () => {
     const v = resolveVid('entry:status-badge-dot', model)!;
-    expect(pathOf(v, model).map((p) => p.vid)).toEqual(['group:Ungrouped', 'component:StatusBadge', 'component:StatusBadge#structure', 'entry:status-badge', 'entry:status-badge-dot']);
+    expect(pathOf(v, model).map((p) => p.vid)).toEqual(['component:StatusBadge', 'component:StatusBadge#structure', 'entry:status-badge', 'entry:status-badge-dot']);
     expect(resolveVid('entry:dashboard#states.1', model)!.lines[0]).toBe('loading');
     expect(pathOf(resolveVid('entry:dashboard#states.1', model)!, model).map((p) => p.vid)).toEqual(['entry:dashboard', 'entry:dashboard#states', 'entry:dashboard#states.1']);
   });
